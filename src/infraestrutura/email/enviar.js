@@ -1,6 +1,7 @@
 /**
  * Envio de e-mail, com adaptador por provedor.
- * Sem EMAIL_PROVEDOR, imprime no terminal; com `resend`, envia de verdade.
+ * Sem EMAIL_PROVEDOR, imprime no terminal (só fora de produção); com
+ * `resend`, envia de verdade.
  */
 
 /**
@@ -11,10 +12,24 @@
  */
 
 /**
+ * Sem provedor, o e-mail vai para o terminal — útil em desenvolvimento.
+ * Em produção o corpo NUNCA é impresso: ele carrega o link de recuperação ou
+ * de convite, e quem lê o log da hospedagem ganharia acesso à conta.
+ *
  * @param {Mensagem} m
  * @returns {Promise<void>}
  */
 async function porTerminal(m) {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn(JSON.stringify({
+      nivel: 'aviso',
+      evento: 'email_nao_enviado',
+      em: new Date().toISOString(),
+      motivo: 'EMAIL_PROVEDOR não configurado; conteúdo omitido do log',
+      assunto: m.assunto,
+    }));
+    return;
+  }
   console.log(
     ['', '='.repeat(72),
      'E-MAIL NÃO ENVIADO — nenhum provedor configurado (EMAIL_PROVEDOR)',
