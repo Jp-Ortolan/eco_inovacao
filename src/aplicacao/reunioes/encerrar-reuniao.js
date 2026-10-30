@@ -25,8 +25,8 @@ export async function encerrarReuniao(usuario, reuniaoId) {
     if (r.status === 'cancelada') {
       throw new ErroDeNegocio('REUNIAO_CANCELADA', 'Esta reunião foi cancelada.');
     }
-// Encerrar duas vezes não duplica ausência, mas devolveria 0 ausentes marcados
-// e faria parecer que a primeira execução não funcionou.
+    // Encerrar duas vezes não duplica ausência, mas devolveria 0 ausentes marcados
+    // e faria parecer que a primeira execução não funcionou.
     if (r.status === 'encerrada') {
       throw new ErroDeNegocio('DADOS_INVALIDOS', 'Esta reunião já foi encerrada.');
     }
@@ -76,8 +76,8 @@ export async function encerrarReuniao(usuario, reuniaoId) {
     const atualizada = await tx.consultaUm(
       `update reuniao set status = 'encerrada' where id = $1 returning id`, [r.id],
     );
-// Sem política de UPDATE o Postgres afeta zero registros em silêncio: sem esta
-// checagem, o encerramento daria certo com a reunião ainda aberta.
+    // Sem política de UPDATE o Postgres afeta zero registros em silêncio: sem esta
+    // checagem, o encerramento daria certo com a reunião ainda aberta.
     if (!atualizada) {
       throw new ErroDeNegocio('SEM_PERMISSAO', 'Seu perfil não permite encerrar reuniões.');
     }

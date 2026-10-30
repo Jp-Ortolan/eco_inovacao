@@ -68,7 +68,7 @@ export const log = {
     escrever('erro', evento, {
       ...dados,
       mensagem: e?.message ?? String(erro),
-// O código do Postgres é o que mais ajuda a diagnosticar sem reproduzir.
+      // O código do Postgres é o que mais ajuda a diagnosticar sem reproduzir.
       codigoBanco: e?.code,
       restricao: e?.constraint,
       pilha: process.env.NODE_ENV === 'production' ? undefined : e?.stack,

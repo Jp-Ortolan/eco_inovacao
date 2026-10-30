@@ -103,8 +103,8 @@ export async function editarInstituicao(usuario, id, entrada) {
       }
     }
 
-// A constraint instituicao_inativa_tem_saida já barraria isso no banco.
-// A checagem aqui existe para dizer QUAL campo falta.
+    // A constraint instituicao_inativa_tem_saida já barraria isso no banco.
+    // A checagem aqui existe para dizer QUAL campo falta.
     const statusFinal = colunas.status ?? atual.status;
     const saidaFinal = 'data_saida' in colunas ? colunas.data_saida : atual.data_saida;
     if (['inativa', 'desligada'].includes(statusFinal) && !saidaFinal) {
@@ -130,8 +130,8 @@ export async function editarInstituicao(usuario, id, entrada) {
       traduzirErroDoBanco(e);
     }
 
-// Sem política de UPDATE o Postgres não levanta erro: não enxerga a linha e
-// afeta zero registros. Sem este if, quem não pode veria salvo com sucesso.
+    // Sem política de UPDATE o Postgres não levanta erro: não enxerga a linha e
+    // afeta zero registros. Sem este if, quem não pode veria salvo com sucesso.
     if (!linha) {
       throw new ErroDeNegocio('SEM_PERMISSAO', 'Seu perfil não permite editar esta instituição.');
     }

@@ -1,5 +1,5 @@
 /**
- * APRESENTAÇÃO — coleção de eventos (revisão de outubro).
+ * APRESENTAÇÃO — coleção de eventos.
  *
  *   GET  /api/eventos?busca=&status=&periodo=proximas&tipoAtividadeId=&pagina=
  *   POST /api/eventos

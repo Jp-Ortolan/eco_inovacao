@@ -45,9 +45,9 @@ export async function listarReunioes(usuario, filtros, natureza = 'reuniao') {
   if (f.periodo === 'passadas') condicoes.push('r.data < current_date');
 
   if (f.instituicaoId) {
-// Convidada OU presente: só convite esconderia quem apareceu sem ser chamado,
-// só presença esconderia quem foi chamado e faltou. O mesmo id aparece duas
-// vezes na condição e entra uma vez no array.
+    // Convidada OU presente: só convite esconderia quem apareceu sem ser chamado,
+    // só presença esconderia quem foi chamado e faltou. O mesmo id aparece duas
+    // vezes na condição e entra uma vez no array.
     valores.push(f.instituicaoId);
     const n = `$${valores.length}`;
     condicoes.push(
@@ -110,8 +110,8 @@ export async function listarReunioes(usuario, filtros, natureza = 'reuniao') {
         presentes: Number(l.presentes),
         ausentes: Number(l.ausentes),
         convidados: Number(l.convidados),
-// null enquanto a reunião não encerra: antes disso o número não significaria
-// nada e a tela mostraria queda onde só houve reunião que não aconteceu.
+        // null enquanto a reunião não encerra: antes disso o número não significaria
+        // nada e a tela mostraria queda onde só houve reunião que não aconteceu.
         percentualComparecimento: l.status === 'encerrada'
           ? l.percentual_comparecimento : null,
       })),

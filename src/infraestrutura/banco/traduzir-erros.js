@@ -18,7 +18,7 @@ const MAPA = {
   NOME_INVALIDO: ['DADOS_INVALIDOS', 'Informe seu nome completo.'],
   TERMO_CURTO: ['DADOS_INVALIDOS', 'Digite ao menos 3 letras do nome.'],
 
-  // ------------------------------------------------- migration 002, Sprint 1
+  // ------------------------------------------------------- migration 002
   // Levantados pela trigger que protege o histórico da instituição.
   INSTITUICAO_COM_HISTORICO: ['INSTITUICAO_COM_HISTORICO',
     'Esta instituição já participou de reuniões e não pode ser excluída. '

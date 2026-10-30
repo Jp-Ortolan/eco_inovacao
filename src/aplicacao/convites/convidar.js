@@ -104,8 +104,8 @@ export async function convidar(usuario, reuniaoId, entrada) {
     return {
       reuniaoId: r.id,
       convidadosAgora: inseridos,
-// Devolve os dois números: a diferença são vínculos já convidados ou
-// encerrados, e a tela diz isso em vez de parecer falha.
+      // Devolve os dois números: a diferença são vínculos já convidados ou
+      // encerrados, e a tela diz isso em vez de parecer falha.
       convitesEnviados: Number(resumo?.convites_enviados ?? 0),
       confirmados: Number(resumo?.confirmados ?? 0),
     };

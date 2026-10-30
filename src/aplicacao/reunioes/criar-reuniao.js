@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Criar reunião ou evento (RF23, revisão de outubro).
+ * CASO DE USO — Criar reunião ou evento (RF23).
  *
  * Reunião e evento são registros diferentes (`natureza`), na mesma tabela:
  * presença, convite e QR Code servem aos dois — ver o cabeçalho da migration

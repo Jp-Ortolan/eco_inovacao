@@ -1,5 +1,5 @@
 /**
- * CASOS DE USO — Contas e permissões (revisão de outubro).
+ * CASOS DE USO — Contas e permissões.
  *
  * "Gerenciar contas e permissões: só o Administrador geral." Não existia rota
  * nenhuma para isso: contas eram criadas por script. Agora o admin cria a

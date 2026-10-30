@@ -1,5 +1,5 @@
 /**
- * CASOS DE USO — Painel público, sem login (revisão de outubro).
+ * CASOS DE USO — Painel público, sem login.
  *
  * Tudo aqui passa pelas funções publico_* do banco (migration 011), que
  * devolvem só o que pode ser público: números agregados, instituições que

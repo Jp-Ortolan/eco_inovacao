@@ -51,8 +51,8 @@ export async function editarReuniao(usuario, id, entrada, natureza) {
     }
     if ('status' in colunas && colunas.status === atual.status) delete colunas.status;
 
-// Reunião encerrada já fechou o denominador dos indicadores: mudar a data agora
-// reescreveria participação passada.
+    // Reunião encerrada já fechou o denominador dos indicadores: mudar a data agora
+    // reescreveria participação passada.
     if (atual.status === 'encerrada'
       && ('data' in colunas || 'hora_inicio' in colunas || 'conta_participacao' in colunas)) {
       throw new ErroDeNegocio('DADOS_INVALIDOS',

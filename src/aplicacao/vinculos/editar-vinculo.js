@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Ajustar a representação (revisão de outubro).
+ * CASO DE USO — Ajustar a representação.
  *
  * Tipo (titular, suplente, integrante, convidado), cargo na instituição, cargo
  * no Fórum, GTs e o ofício que formalizou. Instituição, pessoa e datas NÃO

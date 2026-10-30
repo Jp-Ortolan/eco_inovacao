@@ -40,8 +40,8 @@ export async function GET(req, { params }) {
 export async function POST(req, { params }) {
   const { token } = await params;
   try {
-// Antes de ler o corpo: uma enxurrada não deve nem consumir o corpo, e a
-// tentativa recusada também precisa contar.
+    // Antes de ler o corpo: uma enxurrada não deve nem consumir o corpo, e a
+    // tentativa recusada também precisa contar.
     await exigirDentroDoLimite('registrar', ipDaRequisicao(req), token);
 
     const ip = ipDaRequisicao(req);

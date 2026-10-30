@@ -42,8 +42,8 @@ export async function obterInstituicao(usuario, id) {
       [id],
     );
 
-// Sem linha pode ser não existe ou o RLS não deixou ver. Responder 404 nos dois
-// casos evita confirmar registro que a pessoa não podia consultar.
+    // Sem linha pode ser não existe ou o RLS não deixou ver. Responder 404 nos dois
+    // casos evita confirmar registro que a pessoa não podia consultar.
     if (!i) throw new ErroDeNegocio('NAO_ENCONTRADO', 'Instituição não encontrada.');
 
     // Observações internas, pendências e solicitações são da gestão e da
@@ -51,8 +51,8 @@ export async function obterInstituicao(usuario, id) {
     // tela é a ficha pública dela.
     const propria = ehGestao(u.papel) || i.id === u.instituicaoId;
 
-// Em série, não Promise.all: é uma conexão só, dentro de uma transação. Juntas,
-// um erro na primeira aborta a transação e esconde a causa real.
+    // Em série, não Promise.all: é uma conexão só, dentro de uma transação. Juntas,
+    // um erro na primeira aborta a transação e esconde a causa real.
     const representantes = await tx.consulta(
         `select v.id as vinculo_id, v.cargo, v.status, v.data_inicio, v.data_fim,
                 v.tipo_representacao, v.cargo_forum, v.motivo_encerramento,
@@ -109,8 +109,8 @@ export async function obterInstituicao(usuario, id) {
 
     const pendencias = propria ? await pendenciasDoCadastro(tx, id) : null;
 
-// Indicador vem sempre das views (decisão 3): a view dá o percentual e a
-// consulta ao lado dá as contagens brutas dos cards.
+    // Indicador vem sempre das views (decisão 3): a view dá o percentual e a
+    // consulta ao lado dá as contagens brutas dos cards.
     const resumo = await tx.consultaUm(
       `select w.reunioes_esperadas,
                 w.reunioes_com_presenca,

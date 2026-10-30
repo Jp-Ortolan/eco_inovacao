@@ -186,8 +186,8 @@ export async function enviarDocumento(usuario, { campos, arquivo = null }) {
     // ---------------------------------------------------------- com arquivo
     const checksum = createHash('sha256').update(arquivo.conteudo).digest('hex');
 
-// Mesmo arquivo e mesmo dono: devolve o que existe em vez de criar uma segunda
-// cópia. Clicar duas vezes em enviar é a causa mais comum.
+    // Mesmo arquivo e mesmo dono: devolve o que existe em vez de criar uma segunda
+    // cópia. Clicar duas vezes em enviar é a causa mais comum.
     const repetido = await tx.consultaUm(
       `select id, nome, created_at from documento
         where checksum_sha256 = $1

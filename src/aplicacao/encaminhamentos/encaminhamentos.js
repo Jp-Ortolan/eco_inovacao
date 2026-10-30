@@ -1,5 +1,5 @@
 /**
- * CASOS DE USO — Encaminhamentos da reunião (revisão de outubro).
+ * CASOS DE USO — Encaminhamentos da reunião.
  *
  * O que a reunião decidiu, com responsável e prazo. Quem enxerga a reunião
  * enxerga os encaminhamentos dela; só a gestão escreve.

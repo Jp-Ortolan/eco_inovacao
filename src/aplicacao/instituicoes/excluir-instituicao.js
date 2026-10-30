@@ -55,8 +55,8 @@ export async function excluirInstituicao(usuario, id) {
       traduzirErroDoBanco(e);
     }
 
-// DELETE sem política afeta zero linhas em silêncio. Sem este if, o gestor veria
-// excluída com sucesso e ela voltaria no F5.
+    // DELETE sem política afeta zero linhas em silêncio. Sem este if, o gestor veria
+    // excluída com sucesso e ela voltaria no F5.
     if (!linha) {
       throw new ErroDeNegocio('SEM_PERMISSAO',
         'Apenas o administrador pode excluir instituições.');

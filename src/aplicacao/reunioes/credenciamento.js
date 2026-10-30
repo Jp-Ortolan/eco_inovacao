@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Credenciamento: abrir, fechar e gerar QR novo (revisão de outubro).
+ * CASO DE USO — Credenciamento: abrir, fechar e gerar QR novo.
  *
  * A janela do check-in já existia (checkin_abre_em / checkin_fecha_em), mas
  * só se definia no cadastro. Na prática a Diretoria quer apertar um botão

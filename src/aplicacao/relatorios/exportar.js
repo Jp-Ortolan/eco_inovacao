@@ -1,5 +1,5 @@
 /**
- * Exportações em CSV (abre no Excel) — revisão de outubro.
+ * Exportações em CSV (abre no Excel).
  *
  * "Gerar lista em PDF e Excel." O Excel sai daqui, como CSV pronto para o
  * Excel em português (ver infraestrutura/http/csv.js). O PDF continua sendo

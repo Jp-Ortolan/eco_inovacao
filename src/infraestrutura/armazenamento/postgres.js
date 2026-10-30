@@ -43,7 +43,7 @@ export async function ler(tx, { documentoId }) {
  * @returns {Promise<void>}
  */
 export async function remover(tx, { documentoId }) {
-// O cascade do banco já apaga junto. Existe para quando o adaptador não for o banco.
+  // O cascade do banco já apaga junto. Existe para quando o adaptador não for o banco.
   await tx.consulta('delete from documento_conteudo where documento_id = $1', [documentoId]);
 }
 

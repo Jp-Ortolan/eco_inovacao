@@ -58,8 +58,8 @@ export async function criarRepresentante(usuario, entrada) {
     /** @type {{id: string, nome: string}|null} */
     let pessoa = null;
 
-// Reaproveita a pessoa pelo e-mail. Sem e-mail não dá para afirmar que é a mesma
-// pessoa (dois João Silva), então cria outra e a deduplicação fica manual.
+    // Reaproveita a pessoa pelo e-mail. Sem e-mail não dá para afirmar que é a mesma
+    // pessoa (dois João Silva), então cria outra e a deduplicação fica manual.
     if (dados.email) {
       pessoa = await tx.consultaUm(
         'select id, nome from pessoa where email = $1', [dados.email],

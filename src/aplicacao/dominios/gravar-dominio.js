@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Manter as listas do Fórum (revisão de outubro).
+ * CASO DE USO — Manter as listas do Fórum.
  *
  * Vertentes e GTs nascem vazios (migration 009): os nomes são decisão do
  * Fórum. A gestão cadastra, renomeia e desativa por aqui. Desativar tira do

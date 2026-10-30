@@ -4,7 +4,7 @@
  * Tela "Nova instituição". O formulário chega em camelCase; o banco fala
  * snake_case; a tradução acontece só em esquemas.js.
  *
- * Dois jeitos de começar (revisão de outubro):
+ * Dois jeitos de começar:
  *   completo  — a Diretoria já tem tudo e cadastra direto (inclusive ativa);
  *   rascunho  — a Diretoria abre só com o nome, cria o acesso do representante
  *               e a instituição completa o resto pela área dela.
@@ -62,8 +62,8 @@ export async function criarInstituicao(usuario, entrada) {
       traduzirErroDoBanco(e);
     }
 
-// Um returning vazio significa que algo saiu do previsto: melhor falhar alto
-// do que devolver um id indefinido.
+    // Um returning vazio significa que algo saiu do previsto: melhor falhar alto
+    // do que devolver um id indefinido.
     if (!linha) {
       throw new ErroDeNegocio('SEM_PERMISSAO', 'Não foi possível cadastrar a instituição.');
     }

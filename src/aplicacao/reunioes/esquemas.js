@@ -55,7 +55,7 @@ const objetoReuniao = z.object({
   // instituições ativas. Com 122 instituições, convidar na mão não é opção.
   convidarTodos: z.coerce.boolean().optional().default(false),
 
-  // ------------------------------------------- revisão de outubro (migration 010)
+  // ------------------------------------------------------ migration 010
   // Rascunho = montada pela Diretoria, ainda não divulgada; agendada = publicada.
   status: z.enum(['rascunho', 'agendada']).optional(),
   tipoAtividadeId: z.coerce.number().int().positive('Selecione o tipo.').optional().nullable(),

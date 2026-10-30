@@ -1,5 +1,5 @@
 /**
- * Esquemas das solicitações de alteração (revisão de outubro).
+ * Esquemas das solicitações de alteração.
  *
  * Cada tipo tem o seu formato de `dados`. Validar na ENTRADA, e não só na
  * aprovação, é o que impede a Diretoria de abrir um pedido e descobrir na hora

@@ -7,7 +7,7 @@
  * ambiente está de pé e com o banco na versão certa.
  *
  * É a única rota do painel que responde sem sessão (e está na lista de rotas
- * públicas do middleware): um verificador de saúde não faz login. Em troca, não
+ * públicas do proxy): um verificador de saúde não faz login. Em troca, não
  * devolve dado nenhum do ecossistema.
  */
 import { consulta, consultaUm } from '@/infraestrutura/banco/consulta.js';
