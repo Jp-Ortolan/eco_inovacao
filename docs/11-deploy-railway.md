@@ -55,7 +55,7 @@ em `banco/seed.sql`. **Não rode isso depois que houver dado real.**
 
 ## 5 · Criar o serviço da aplicação
 
-**New → GitHub Repo → `Jp-Ortolan/backend_CI`**, branch `develop`.
+**New → GitHub Repo → `Jp-Ortolan/eco_inovacao`**, branch `main` (produção; o `develop` é a integração).
 
 O `railway.json` na raiz já diz o resto: build com Nixpacks, migrations antes de
 cada deploy, start, e verificação de saúde em `/api/saude`.
