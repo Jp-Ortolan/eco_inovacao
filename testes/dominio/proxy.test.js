@@ -4,6 +4,7 @@
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { NextRequest } from 'next/server';
+import { LIMITE_CORPO_JSON, LIMITE_CORPO_MULTIPART } from '@/infraestrutura/http/limites-corpo.js';
 
 process.env.URL_FRONTEND = 'https://front.exemplo.org,http://localhost:5173';
 
@@ -76,7 +77,7 @@ describe('corpo e sessão', () => {
   test('JSON acima do limite → 413 antes de chegar à rota', async () => {
     const r = modulo.proxy(pedido('POST', '/api/governanca/contas', {
       ...SESSAO, 'content-type': 'application/json',
-      'content-length': String(modulo.LIMITE_CORPO_JSON + 1),
+      'content-length': String(LIMITE_CORPO_JSON + 1),
     }));
     assert.equal(r.status, 413);
   });
@@ -89,7 +90,7 @@ describe('corpo e sessão', () => {
     assert.equal(ok.status, 200);
     const grande = modulo.proxy(pedido('POST', '/api/governanca/instituicoes/x/documentos', {
       ...SESSAO, 'content-type': 'multipart/form-data; boundary=x',
-      'content-length': String(modulo.LIMITE_CORPO_MULTIPART + 1),
+      'content-length': String(LIMITE_CORPO_MULTIPART + 1),
     }));
     assert.equal(grande.status, 413);
   });

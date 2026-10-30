@@ -17,14 +17,16 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      # Só para desenvolvimento. Para trocar: POSTGRES_PASSWORD=... no .env.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ecossistema
       # Ordenação e comparação de texto em pt-BR: sem isto, "Á" vem depois de
       # "Z" na listagem de instituições.
       LANG: pt_BR.utf8
       POSTGRES_INITDB_ARGS: "--locale=C.UTF-8 --encoding=UTF8"
+    # Só na própria máquina: na rede local, qualquer um entraria com a senha padrão.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - dados-postgres:/var/lib/postgresql/data
     healthcheck:

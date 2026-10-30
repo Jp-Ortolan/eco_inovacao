@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { origemLiberada } from '@/infraestrutura/http/front.js';
+import { LIMITE_CORPO_JSON, LIMITE_CORPO_MULTIPART } from '@/infraestrutura/http/limites-corpo.js';
 
 /**
  * Executado antes de toda rota /api: CORS, conferência de origem (CSRF),
@@ -23,12 +24,6 @@ const ROTAS_PUBLICAS = [
 
 const METODOS_INSEGUROS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/**
- * Teto do corpo. Precisa casar com experimental.proxyClientMaxBodySize do
- * next.config.mjs: acima dele o Next corta o corpo sem avisar a rota.
- */
-export const LIMITE_CORPO_MULTIPART = 25 * 1024 * 1024;
-export const LIMITE_CORPO_JSON = 2 * 1024 * 1024;
 
 const CABECALHOS_SEGURANCA = {
   'X-Content-Type-Options': 'nosniff',
