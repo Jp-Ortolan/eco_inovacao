@@ -2,76 +2,124 @@ import { NextResponse } from 'next/server';
 import { origemLiberada } from '@/infraestrutura/http/front.js';
 
 /**
- * Duas coisas antes de qualquer rota: CORS e a conferência do cookie.
+ * Executado antes de toda rota /api: CORS, conferência de origem (CSRF),
+ * tamanho do corpo e presença do cookie de sessão.
  *
- * CORS existe porque o front é outro projeto, em outro endereço — sem estes
- * cabeçalhos o navegador nem entrega a resposta a ele. Só as origens listadas
- * em URL_FRONTEND passam, e com credenciais, para o cookie de sessão viajar.
- *
- * O cookie é só conferido pela PRESENÇA: no Edge não há conexão com o Postgres.
- * A validade é checada no servidor, em usuarioAtual() — cookie forjado passa
- * por aqui e morre lá. A resposta é 401 em JSON, não redirecionamento: quem
- * chama é o front, que precisa do código para levar o usuário ao login.
+ * O cookie só é conferido pela PRESENÇA; a validade é checada no servidor, em
+ * usuarioAtual(). A resposta é 401 em JSON, não redirecionamento: quem chama
+ * é o front, que leva o usuário ao login.
  */
 const ROTAS_PUBLICAS = [
-  // Check-in por QR Code: exigir login do participante mataria a proposta.
-  '/api/checkin',
-  // Verificador de saúde não faz login, e a rota não devolve dado do ecossistema.
+  '/api/checkin',            // check-in por QR Code
   '/api/saude',
-  // Entrar e recuperar senha: são elas que criam a sessão.
-  '/api/sessao',
-  '/api/senha',
-  // Painel público (revisão de outubro): sem login, só dado agregado ou
-  // autorizado. Quem recorta são as funções publico_* do banco (migration 011).
-  '/api/publico',
-  // Contrato /api/governanca do front: só estas quatro são sem login. O resto
-  // de /api/governanca exige sessão como qualquer rota.
+  '/api/sessao',             // entrar
+  '/api/senha',              // recuperar e redefinir a senha
+  '/api/publico',            // painel público: as funções publico_* recortam o dado
   '/api/governanca/publico',
   '/api/governanca/checkin',
-  // QR (o token é o próprio conteúdo do QR) e arquivo por link assinado.
-  '/api/governanca/qr',
-  '/api/governanca/arquivos',
+  '/api/governanca/qr',      // o token é o conteúdo do QR
+  '/api/governanca/arquivos', // link assinado
 ];
+
+const METODOS_INSEGUROS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Teto do corpo. Precisa casar com experimental.proxyClientMaxBodySize do
+ * next.config.mjs: acima dele o Next corta o corpo sem avisar a rota.
+ */
+export const LIMITE_CORPO_MULTIPART = 25 * 1024 * 1024;
+export const LIMITE_CORPO_JSON = 2 * 1024 * 1024;
+
+const CABECALHOS_SEGURANCA = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+};
 
 /**
  * @param {NextResponse} resposta
- * @param {string} origem
+ * @param {string} origem  já conferida por origemLiberada()
  */
-function comCors(resposta, origem) {
+function finalizar(resposta, origem) {
   if (origem) {
     resposta.headers.set('Access-Control-Allow-Origin', origem);
     resposta.headers.set('Access-Control-Allow-Credentials', 'true');
   }
   resposta.headers.set('Vary', 'Origin');
+  for (const [k, v] of Object.entries(CABECALHOS_SEGURANCA)) {
+    if (!resposta.headers.has(k)) resposta.headers.set(k, v);
+  }
   return resposta;
+}
+
+/**
+ * @param {string} codigo
+ * @param {string} mensagem
+ * @param {number} status
+ * @param {string} origem
+ */
+const erro = (codigo, mensagem, status, origem) =>
+  finalizar(NextResponse.json({ erro: { codigo, mensagem } }, { status }), origem);
+
+/**
+ * Proteção contra CSRF. O cookie de sessão vai com SameSite=None quando front
+ * e API estão em domínios diferentes, então o navegador o anexa a POST vindo
+ * de QUALQUER site. Toda requisição que muda estado precisa vir de uma origem
+ * liberada em URL_FRONTEND (ou da própria API).
+ *
+ * Sem Origin, vale o Sec-Fetch-Site; sem nenhum dos dois não é um navegador
+ * moderno (curl, script, teste), e esse cliente não carrega cookie alheio.
+ *
+ * @param {import('next/server').NextRequest} req
+ */
+export function origemConfiavel(req) {
+  const origem = req.headers.get('origin');
+  if (origem) {
+    if (origemLiberada(origem)) return true;
+    try {
+      return new URL(origem).host === req.headers.get('host');
+    } catch {
+      return false; // inclui Origin: null (iframe sandbox, file://)
+    }
+  }
+  const site = req.headers.get('sec-fetch-site');
+  return !site || site === 'same-origin' || site === 'none';
 }
 
 /**
  * @param {import('next/server').NextRequest} req
  */
-export function middleware(req) {
+export function proxy(req) {
   const origem = origemLiberada(req.headers.get('origin'));
 
-  // Preflight: o navegador pergunta antes de mandar POST/PATCH/DELETE com cookie.
   if (req.method === 'OPTIONS') {
     const r = new NextResponse(null, { status: 204 });
     r.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
     r.headers.set('Access-Control-Allow-Headers', 'Content-Type');
     r.headers.set('Access-Control-Max-Age', '86400');
-    return comCors(r, origem);
+    return finalizar(r, origem);
+  }
+
+  if (METODOS_INSEGUROS.has(req.method)) {
+    if (!origemConfiavel(req)) {
+      return erro('ORIGEM_NAO_PERMITIDA', 'Origem da requisição não permitida.', 403, origem);
+    }
+    const tamanho = Number(req.headers.get('content-length') ?? 0);
+    const multipart = (req.headers.get('content-type') ?? '').includes('multipart/form-data');
+    const limite = multipart ? LIMITE_CORPO_MULTIPART : LIMITE_CORPO_JSON;
+    if (tamanho > limite) {
+      return erro('ARQUIVO_GRANDE_DEMAIS', 'A requisição passa do tamanho permitido.', 413, origem);
+    }
   }
 
   const caminho = req.nextUrl.pathname;
-  const publica = ROTAS_PUBLICAS.some((r) => caminho.startsWith(r));
+  const publica = ROTAS_PUBLICAS.some((r) => caminho === r || caminho.startsWith(`${r}/`));
 
   if (!publica && !req.cookies.get('sessao')) {
-    return comCors(NextResponse.json(
-      { erro: { codigo: 'NAO_AUTENTICADO', mensagem: 'É preciso estar autenticado.' } },
-      { status: 401 },
-    ), origem);
+    return erro('NAO_AUTENTICADO', 'É preciso estar autenticado.', 401, origem);
   }
 
-  return comCors(NextResponse.next(), origem);
+  return finalizar(NextResponse.next(), origem);
 }
 
 export const config = {
