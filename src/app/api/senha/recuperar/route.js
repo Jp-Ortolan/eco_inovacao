@@ -9,6 +9,7 @@
 import { pedirRecuperacao } from '@/aplicacao/autenticacao/recuperar-senha.js';
 import { ErroDeNegocio } from '@/dominio/erros.js';
 import { ok, falha } from '@/infraestrutura/http/resposta.js';
+import { ipDaRequisicao } from '@/infraestrutura/http/limite.js';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req) {
   try {
     const corpo = await req.json().catch(() => null);
-    const r = await pedirRecuperacao({ email: String(corpo?.email ?? '') });
+    const r = await pedirRecuperacao({ email: String(corpo?.email ?? ''), ip: ipDaRequisicao(req) });
     if (!r.ok) throw new ErroDeNegocio('DADOS_INVALIDOS', r.erro);
     return ok({ mensagem: r.mensagem });
   } catch (e) {

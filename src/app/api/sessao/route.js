@@ -13,6 +13,7 @@ import { usuarioAtual, encerrarSessao } from '@/infraestrutura/seguranca/sessao.
 import { montarPerfil } from '@/aplicacao/autenticacao/perfil.js';
 import { ErroDeNegocio } from '@/dominio/erros.js';
 import { ok, falha } from '@/infraestrutura/http/resposta.js';
+import { ipDaRequisicao } from '@/infraestrutura/http/limite.js';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,7 @@ export async function POST(req) {
     const r = await entrar({
       email: String(corpo?.email ?? ''),
       senha: String(corpo?.senha ?? ''),
-      ip: req.headers.get('x-forwarded-for'),
+      ip: ipDaRequisicao(req),
       agente: req.headers.get('user-agent'),
     });
 

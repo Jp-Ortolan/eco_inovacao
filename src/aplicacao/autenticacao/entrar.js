@@ -7,6 +7,9 @@ import { z } from 'zod';
 import { consultaUm } from '@/infraestrutura/banco/consulta.js';
 import { abrirSessao, paraUsuarioSessao } from '@/infraestrutura/seguranca/sessao.js';
 import { conferir } from '@/infraestrutura/seguranca/senha.js';
+import {
+  esquecerFalhasDaConta, exigirTentativaPermitida, registrarTentativa,
+} from '@/infraestrutura/seguranca/tentativas.js';
 
 export const esquemaEntrar = z.object({
   email: z.string().trim().email('Informe um e-mail válido.'),
@@ -29,6 +32,8 @@ export const esquemaEntrar = z.object({
  * Confere as credenciais e, dando certo, abre a sessão.
  * A mensagem de erro é a mesma para e-mail inexistente, senha errada e conta
  * desativada: diferenciar entregaria a lista de quem tem conta.
+ * Falhas demais do IP ou da conta → MUITAS_TENTATIVAS (429), antes de
+ * conferir a senha.
  *
  * @param {{ email: string, senha: string, ip?: string|null, agente?: string|null }} entrada
  * @returns {Promise<{ ok: true, usuario: import('@/infraestrutura/seguranca/sessao.js').UsuarioSessao }
@@ -40,19 +45,25 @@ export async function entrar({ email, senha, ip = null, agente = null }) {
     return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' };
   }
 
+  const quem = { ip, email: analise.data.email };
+  await exigirTentativaPermitida('login', quem);
+
   /** @type {Credenciais|null} */
   const u = await consultaUm(
     'select id, nome, email, senha_hash, papel, ativo, instituicao_id, pessoa_id from auth_credenciais($1)',
     [analise.data.email],
   );
 
-// Confere mesmo sem o e-mail existir: pular deixaria a resposta mais rápida e
-// o tempo entregaria o que a mensagem esconde.
+  // Confere mesmo sem o e-mail existir: pular deixaria a resposta mais rápida
+  // e o tempo entregaria o que a mensagem esconde.
   const senhaConfere = await conferir(analise.data.senha, u?.senha_hash ?? null);
 
   if (!u || !u.ativo || !senhaConfere) {
+    await registrarTentativa('login', quem);
     return { ok: false, erro: 'E-mail ou senha incorretos.' };
   }
+
+  await esquecerFalhasDaConta('login', analise.data.email);
 
   await abrirSessao(u.id, ip, agente);
 

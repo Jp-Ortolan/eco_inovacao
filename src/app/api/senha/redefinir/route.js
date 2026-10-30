@@ -8,6 +8,7 @@
 import { redefinirSenha } from '@/aplicacao/autenticacao/recuperar-senha.js';
 import { ErroDeNegocio } from '@/dominio/erros.js';
 import { ok, falha } from '@/infraestrutura/http/resposta.js';
+import { ipDaRequisicao } from '@/infraestrutura/http/limite.js';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export async function POST(req) {
       token: String(corpo?.token ?? ''),
       senha: String(corpo?.senha ?? ''),
       confirmacao: String(corpo?.confirmacao ?? ''),
+      ip: ipDaRequisicao(req),
     });
     if (!r.ok) throw new ErroDeNegocio('DADOS_INVALIDOS', r.erro);
     return ok({ mensagem: r.mensagem });

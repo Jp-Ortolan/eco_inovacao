@@ -1,8 +1,8 @@
 /**
- * Limite de requisições por IP nas rotas públicas (RNF14).
- * Só as rotas sem login precisam (check-in e painel público): o painel interno
- * já exige sessão, que é limite melhor que IP.
- * O contador mora no banco (migration 005), não em memória.
+ * Limite de requisições por IP nas rotas públicas de check-in e do painel
+ * (RNF14). O contador mora no banco (migration 005), não em memória.
+ * Login e recuperação de senha têm limite próprio, por IP e por conta:
+ * ver seguranca/tentativas.js.
  */
 import { consultaUm } from '@/infraestrutura/banco/consulta.js';
 import { ErroDeNegocio } from '@/dominio/erros.js';
@@ -15,25 +15,28 @@ const LIMITES = {
   buscar: { maximo: 20, janela: '1 minute' },
   registrar: { maximo: 10, janela: '1 minute' },
   consultar: { maximo: 60, janela: '1 minute' },
-  // Painel público (revisão de outubro): só dado agregado ou autorizado, mas
-  // sem login — o limite impede usar a rota como fonte para raspagem em massa.
+  // Dado agregado ou autorizado, mas sem login: impede raspagem em massa.
   publico: { maximo: 120, janela: '1 minute' },
 };
 
 /**
- * IP de quem chamou. Atrás de proxy vem em x-forwarded-for, cujo primeiro
- * endereço é o cliente. Sem proxy na frente dá para forjar: isto barra abuso
- * casual, não atacante determinado.
+ * IP de quem chamou, tirado do X-Forwarded-For.
+ *
+ * Cada proxy ACRESCENTA o endereço de quem o chamou ao fim da lista; o que
+ * vem antes foi escrito pelo próprio cliente e pode ser qualquer coisa. Por
+ * isso o IP confiável é o N-ésimo a partir do FIM, sendo N o número de proxies
+ * na frente da aplicação (PROXIES_CONFIAVEIS, padrão 1 — o do Railway). Com
+ * uma CDN na frente do Railway, use 2.
  *
  * @param {import('next/server').NextRequest|Request} req
  * @returns {string}
  */
 export function ipDaRequisicao(req) {
-  const encaminhado = req.headers.get('x-forwarded-for');
-  if (encaminhado) return encaminhado.split(',')[0].trim();
-  return req.headers.get('x-real-ip')
-    ?? /** @type {any} */ (req).ip
-    ?? '';
+  const saltos = Math.max(1, Number.parseInt(process.env.PROXIES_CONFIAVEIS ?? '1', 10) || 1);
+  const lista = (req.headers.get('x-forwarded-for') ?? '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
+  if (lista.length) return lista[Math.max(0, lista.length - saltos)];
+  return req.headers.get('x-real-ip') ?? '';
 }
 
 /**
