@@ -10,6 +10,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { prepararConexao } from '../src/infraestrutura/banco/ssl.js';
 import { executarArquivo } from './lib/sql.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -19,8 +20,7 @@ if (!url) {
   process.exit(1);
 }
 
-const ssl = /localhost|127\.0\.0\.1|host=\//.test(url) ? undefined : { rejectUnauthorized: false };
-const c = new pg.Client({ connectionString: url, ssl });
+const c = new pg.Client(prepararConexao(url));
 await c.connect();
 
 try {

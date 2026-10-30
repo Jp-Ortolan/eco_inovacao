@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { prepararConexao } from './ssl.js';
 
 const { Pool } = pg;
 
@@ -17,17 +18,6 @@ pg.types.setTypeParser(1082, (valor) => valor);
  */
 const global_ = globalThis;
 
-/**
- * Railway exige TLS; Postgres local normalmente não tem.
- * Só dispensa TLS quando o endereço é claramente local.
- *
- * @param {string} url
- */
-function configSsl(url) {
-  const local = /localhost|127\.0\.0\.1|host=\/|sslmode=disable/.test(url);
-  return local ? undefined : { rejectUnauthorized: false };
-}
-
 /** @returns {import('pg').Pool} */
 export function pool() {
   if (!global_.poolPg) {
@@ -35,11 +25,10 @@ export function pool() {
     if (!url) throw new Error('DATABASE_URL não está definida.');
 
     global_.poolPg = new Pool({
-      connectionString: url,
+      ...prepararConexao(url),
       max: Number(process.env.DB_MAX_CONEXOES ?? 10),
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
-      ssl: configSsl(url),
     });
 
     global_.poolPg.on('error', (e) => {

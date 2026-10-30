@@ -22,6 +22,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { prepararConexao } from '../src/infraestrutura/banco/ssl.js';
 import { executarArquivo } from './lib/sql.mjs';
 
 const { Client } = pg;
@@ -42,15 +43,13 @@ function comBanco(url, nome) {
   return u.toString();
 }
 
-const ssl = /localhost|127\.0\.0\.1|host=\/|sslmode=disable/.test(URL_ADMIN)
-  ? undefined : { rejectUnauthorized: false };
 
 /**
  * Abre conexão, roda a ação e fecha — mesmo se a ação falhar.
  * Sem o `finally`, um erro no meio deixaria o processo pendurado.
  */
 async function conectando(url, acao) {
-  const c = new Client({ connectionString: url, ssl });
+  const c = new Client(prepararConexao(url));
   await c.connect();
   try {
     return await acao(c);
@@ -105,7 +104,7 @@ async function principal() {
     // Conexão nova por arquivo: um erro deixa a transação abortada, e as
     // consultas seguintes falhariam por tabela de dominó em vez de por defeito
     // próprio — escondendo qual teste realmente quebrou.
-    const c = new Client({ connectionString: url, ssl });
+    const c = new Client(prepararConexao(url));
     let ok = 0;
 
     // As asserções dos testes falam por `raise notice`. É preciso escutar o
