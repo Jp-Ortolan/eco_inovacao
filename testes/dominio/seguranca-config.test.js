@@ -101,3 +101,26 @@ describe('e-mail sem provedor', () => {
     }
   });
 });
+
+describe('link assinado de arquivo', async () => {
+  const { assinar, verificar } = await import('@/infraestrutura/seguranca/assinatura.js');
+
+  test('confere quem, o quê e até quando', () => {
+    const t = assinar({ t: 'doc', id: 'd1', u: 'u1' });
+    assert.deepEqual({ ...verificar(t), exp: 0 }, { t: 'doc', id: 'd1', u: 'u1', exp: 0 });
+  });
+
+  test('trocar o documento ou o dono invalida a assinatura', () => {
+    const [, assinatura] = assinar({ t: 'doc', id: 'd1', u: 'u1' }).split('.');
+    const outro = Buffer.from(JSON.stringify({ t: 'doc', id: 'd2', u: 'u1', exp: Date.now() + 60_000 })).toString('base64url');
+    assert.equal(verificar(`${outro}.${assinatura}`), null);
+  });
+
+  test('vencido não vale', () => {
+    assert.equal(verificar(assinar({ t: 'rel', id: 'r1', u: 'u1' }, -1)), null);
+  });
+
+  test('lixo não derruba a verificação', () => {
+    for (const t of ['', 'a', 'a.b', '..', null, undefined]) assert.equal(verificar(/** @type {any} */ (t)), null);
+  });
+});

@@ -15,6 +15,7 @@ import { pedirRecuperacao, redefinirSenha } from '@/aplicacao/autenticacao/recup
 import { REGRAS, esquecerFalhasDaConta } from '@/infraestrutura/seguranca/tentativas.js';
 import { ipDaRequisicao } from '@/infraestrutura/http/limite.js';
 import { ErroDeNegocio } from '@/dominio/erros.js';
+import { usuarioPorId } from '@/aplicacao/governanca/comum.js';
 
 const URL_APP = process.env.DATABASE_URL ?? '';
 const URL_ADMIN = process.env.DATABASE_URL_ADMIN ?? '';
@@ -126,6 +127,18 @@ describe('tabela de tentativas', { skip: !rodar }, () => {
   test('a conta é guardada como hash, nunca o e-mail', async () => {
     const { rows } = await admin.query(`select count(*)::int as n from tentativa_acesso where chave like '%@%'`);
     assert.equal(rows[0].n, 0);
+  });
+});
+
+describe('link assinado', { skip: !rodar }, () => {
+  test('link emitido para conta desativada deixa de valer', async () => {
+    assert.equal((await usuarioPorId(usuarioId)).id, usuarioId);
+    await admin.query('update usuario set ativo = false where id = $1', [usuarioId]);
+    try {
+      await assert.rejects(usuarioPorId(usuarioId), (e) => e instanceof ErroDeNegocio && e.codigo === 'NAO_AUTENTICADO');
+    } finally {
+      await admin.query('update usuario set ativo = true where id = $1', [usuarioId]);
+    }
   });
 });
 
