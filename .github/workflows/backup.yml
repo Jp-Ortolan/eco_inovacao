@@ -1,68 +1,111 @@
 name: Backup do banco
 
-# Dump diário do banco de produção, guardado como artefato do Actions.
-# Enquanto o segredo DATABASE_URL_ADMIN_PROD não existir, o job encerra sem erro —
-# assim o quadro de status não fica vermelho antes do Railway existir.
+# Dump diário da produção, criptografado com age ANTES de sair do runner e
+# enviado a um bucket privado compatível com S3 (AWS S3, Cloudflare R2,
+# Backblaze B2...). Nada é guardado como artefato do Actions: artefato é
+# legível por quem tem acesso de leitura ao repositório.
+#
+# O job só gera o dump quando TODOS os segredos abaixo existem; faltando
+# qualquer um, encerra com um aviso e sem tocar no banco.
+#
+#   DATABASE_URL_ADMIN_PROD   URL do dono do banco (de preferência com sslmode=verify-full)
+#   BACKUP_AGE_RECIPIENT      chave PÚBLICA age (age1...). A privada fica fora do GitHub
+#   BACKUP_S3_BUCKET          nome do bucket (privado, com versionamento/retenção)
+#   BACKUP_S3_ENDPOINT        endpoint S3 (vazio para AWS; ex.: https://<conta>.r2.cloudflarestorage.com)
+#   BACKUP_S3_ACCESS_KEY_ID   credencial com permissão só de escrita no bucket
+#   BACKUP_S3_SECRET_ACCESS_KEY
+#   BACKUP_S3_REGION          ex.: us-east-1 (R2 usa "auto")
+#
+# Passo a passo e restauração: docs/09-operacao.md, seção "Backup".
 
 on:
   schedule:
     - cron: '0 6 * * *'   # 03:00 em Brasília
-  workflow_dispatch:       # permite rodar na mão, antes de uma migration
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-producao
+  cancel-in-progress: false
 
 jobs:
   dump:
-    name: pg_dump da produção
+    name: pg_dump criptografado
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-
-      - name: O segredo está configurado?
-        id: segredo
+      - name: Conferir configuração
+        id: config
         env:
           URL: ${{ secrets.DATABASE_URL_ADMIN_PROD }}
+          RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          CHAVE: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          SEGREDO: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
         run: |
-          if [ -n "$URL" ]; then
-            echo "tem=true" >> "$GITHUB_OUTPUT"
+          faltando=""
+          [ -n "$URL" ]       || faltando="$faltando DATABASE_URL_ADMIN_PROD"
+          [ -n "$RECIPIENT" ] || faltando="$faltando BACKUP_AGE_RECIPIENT"
+          [ -n "$BUCKET" ]    || faltando="$faltando BACKUP_S3_BUCKET"
+          [ -n "$CHAVE" ]     || faltando="$faltando BACKUP_S3_ACCESS_KEY_ID"
+          [ -n "$SEGREDO" ]   || faltando="$faltando BACKUP_S3_SECRET_ACCESS_KEY"
+          if [ -n "$faltando" ]; then
+            echo "pronto=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Backup não configurado (faltam:$faltando). Nenhum dump foi gerado."
           else
-            echo "tem=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::DATABASE_URL_ADMIN_PROD ainda não foi cadastrado — nada a fazer."
+            case "$RECIPIENT" in
+              age1*) echo "pronto=true" >> "$GITHUB_OUTPUT" ;;
+              *) echo "::error::BACKUP_AGE_RECIPIENT precisa ser uma chave pública age (age1...)."; exit 1 ;;
+            esac
           fi
 
-      # A versão do cliente precisa acompanhar a do servidor: um pg_dump 15
-      # recusa dump de um servidor 16.
-      - name: Instalar o pg_dump 16
-        if: steps.segredo.outputs.tem == 'true'
+      # O cliente precisa ser da mesma versão do servidor (pg_dump 15 recusa servidor 16).
+      - name: Instalar pg_dump 16 e age
+        if: steps.config.outputs.pronto == 'true'
         run: |
           sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
           sudo sed -i 's|deb |deb [signed-by=/usr/share/keyrings/pgdg.gpg] |' /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-16
+          sudo apt-get install -y -qq postgresql-client-16 age
 
-      # -Fc é o formato comprimido do Postgres: restaura com pg_restore e
-      # permite restaurar uma tabela só. O .sql puro obriga tudo ou nada.
-      - name: Gerar o dump
-        if: steps.segredo.outputs.tem == 'true'
+      - name: Gerar, conferir e criptografar
+        if: steps.config.outputs.pronto == 'true'
         env:
           DATABASE_URL_ADMIN_PROD: ${{ secrets.DATABASE_URL_ADMIN_PROD }}
+          RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
         run: |
-          set -o pipefail
+          set -euo pipefail
+          umask 077
           nome="ecossistema-$(date -u +%Y%m%d-%H%M).dump"
-          pg_dump --no-owner --no-privileges -Fc -f "$nome" "$DATABASE_URL_ADMIN_PROD"
-          ls -lh "$nome"
-          # Dump de banco vazio tem alguns KB. Abaixo disso algo deu errado em
-          # silêncio, e um backup vazio é pior que backup nenhum.
-          if [ "$(stat -c%s "$nome")" -lt 4096 ]; then
-            echo "::error::dump de $(stat -c%s "$nome") bytes — pequeno demais para ser real"
+          claro="$RUNNER_TEMP/$nome"
+          pg_dump --no-owner --no-privileges -Fc -f "$claro" "$DATABASE_URL_ADMIN_PROD"
+          # Dump que não restaura não é backup: pg_restore --list falha com arquivo truncado.
+          tabelas="$(pg_restore --list "$claro" | grep -c 'TABLE DATA' || true)"
+          if [ "$tabelas" -lt 5 ]; then
+            echo "::error::dump com só $tabelas tabelas com dados"
             exit 1
           fi
-          echo "NOME_DUMP=$nome" >> "$GITHUB_ENV"
+          age -r "$RECIPIENT" -o "$RUNNER_TEMP/$nome.age" "$claro"
+          shred -u "$claro"
+          echo "ARQUIVO=$RUNNER_TEMP/$nome.age" >> "$GITHUB_ENV"
+          echo "NOME=$nome.age" >> "$GITHUB_ENV"
+          echo "$tabelas tabelas com dados; $(stat -c%s "$RUNNER_TEMP/$nome.age") bytes criptografados"
 
-      - name: Guardar o dump
-        if: steps.segredo.outputs.tem == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.NOME_DUMP }}
-          path: ${{ env.NOME_DUMP }}
-          retention-days: 30
-          if-no-files-found: error
+      - name: Enviar ao bucket privado
+        if: steps.config.outputs.pronto == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION || 'us-east-1' }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+        run: |
+          set -euo pipefail
+          extra=()
+          [ -n "$ENDPOINT" ] && extra=(--endpoint-url "$ENDPOINT")
+          aws "${extra[@]}" s3 cp "$ARQUIVO" "s3://$BUCKET/postgres/$NOME" --only-show-errors
+          rm -f "$ARQUIVO"
+          echo "enviado: s3://$BUCKET/postgres/$NOME"
