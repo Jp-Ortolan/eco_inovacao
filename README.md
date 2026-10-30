@@ -40,8 +40,8 @@ O 22 é o mínimo porque `node --test` só entende curinga (`*.test.js`) a parti
 dele — no 20 os testes não são encontrados.
 
 ```bash
-git clone https://github.com/Jp-Ortolan/backend_CI.git
-cd backend_CI
+git clone https://github.com/Jp-Ortolan/eco_inovacao.git
+cd eco_inovacao
 npm install
 ```
 
@@ -87,7 +87,7 @@ mudar — é a matriz de permissões funcionando.
 ## Estrutura de pastas
 
 ```
-backend_CI/
+eco_inovacao/
 ├── src/
 │   ├── app/                        # ① Apresentação — só rotas HTTP
 │   │   └── api/                    #    27 rotas REST (não há telas: só back-end)
