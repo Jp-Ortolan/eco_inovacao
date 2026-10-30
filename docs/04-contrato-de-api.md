@@ -908,25 +908,32 @@ do front; o back só monta o endereço.
 
 ## Rotas públicas
 
-Só estas quatro dispensam sessão: `/api/sessao`, `/api/senha/*`,
-`/api/checkin/*` e `/api/saude`. Todas as outras respondem 401 sem o cookie,
-antes mesmo de chegar na rota (`src/middleware.js`).
+Dispensam sessão: `/api/sessao`, `/api/senha/*`, `/api/checkin/*`,
+`/api/saude`, `/api/publico/*` e, no contrato de governança, `publico`,
+`checkin`, `qr` e `arquivos`. Todas as outras respondem 401 sem o cookie,
+antes mesmo de chegar na rota (`src/proxy.js`).
+
+Login, pedido de recuperação e redefinição de senha respondem **429
+`MUITAS_TENTATIVAS`** quando o IP ou a conta passam do limite.
 
 ## CORS
 
-O middleware libera **uma** origem: a configurada em `URL_FRONTEND`, com
-`Access-Control-Allow-Credentials: true`. Requisição `OPTIONS` (preflight)
-responde 204 com os métodos e `Content-Type` liberados.
+O proxy libera as origens configuradas em `URL_FRONTEND` (separadas por
+vírgula), com `Access-Control-Allow-Credentials: true`. Requisição `OPTIONS`
+(preflight) responde 204 com os métodos e `Content-Type` liberados.
 
-Se o front rodar num domínio diferente do da API, o cookie só viaja com
-`sameSite=none` — ligue `COOKIE_CROSS_SITE=1`. Isso exige HTTPS dos dois lados.
-Com front e API sob o mesmo domínio, deixe desligado: `lax` é mais seguro.
+POST, PUT, PATCH e DELETE vindos de origem fora da lista (ou da própria API)
+respondem **403 `ORIGEM_NAO_PERMITIDA`**: é a proteção contra CSRF.
+
+Se o front rodar num domínio HTTPS diferente do da API, o cookie sai
+`SameSite=None; Secure; Partitioned` automaticamente (`COOKIE_CROSS_SITE=1`
+força). Com front e API sob o mesmo domínio fica `lax`.
 
 ## Variáveis de ambiente acrescentadas
 
 ```
 URL_FRONTEND=https://front.exemplo.br   # origem liberada no CORS, base do QR e do link de senha
-COOKIE_CROSS_SITE=0                     # 1 só quando front e API ficam em domínios diferentes
+COOKIE_CROSS_SITE=0                     # 1 força o modo entre domínios (normalmente detectado)
 ```
 
 ---

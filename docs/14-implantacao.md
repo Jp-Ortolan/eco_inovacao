@@ -12,7 +12,7 @@ Para conhecer o projeto: [README](../README.md) · [Arquitetura](01-arquitetura.
 
 | Item | Versão / observação |
 |---|---|
-| Node.js | 22 ou mais novo |
+| Node.js | 22 ou mais novo (Next.js 16) |
 | PostgreSQL | 15 ou mais novo (testado no 16) |
 | Hospedagem | Qualquer uma que rode `npm run build` + `npm run start` (Railway, Render, VPS com PM2/Docker…). O `railway.json` já deixa o Railway pronto |
 | E-mail | Conta na Resend (resend.com) com o domínio verificado |
@@ -23,7 +23,7 @@ Para conhecer o projeto: [README](../README.md) · [Arquitetura](01-arquitetura.
 2. **Tabelas.** Na pasta do projeto, com `DATABASE_URL_ADMIN` = URL do dono:
    ```bash
    npm ci
-   npm run db:migrar        # aplica banco/migrations/001 a 017, uma vez cada
+   npm run db:migrar        # aplica banco/migrations/001 a 018, uma vez cada
    npm run db:senha-app     # define a senha do usuário app_web (o da aplicação)
    ```
    A aplicação **não** usa o dono: usa `app_web`, que não é dono das tabelas.
@@ -32,14 +32,15 @@ Para conhecer o projeto: [README](../README.md) · [Arquitetura](01-arquitetura.
    ```bash
    node scripts/criar-usuario.mjs "Nome" email@dominio admin
    ```
-   A pessoa define a senha pelo link que chega por e-mail (ou que aparece no
-   log do servidor enquanto o e-mail não estiver configurado). Daí em diante
-   as contas são criadas na tela **Contas e permissões**.
+   O script pede a senha no terminal (sem eco). Daí em diante as contas são
+   criadas na tela **Contas e permissões**, e cada pessoa recebe o link de
+   primeiro acesso por e-mail — por isso o e-mail precisa estar configurado
+   (em produção o link **não** aparece no log).
 4. **Aplicação.** Configure as variáveis abaixo, rode `npm run build` e
    `npm run start`. Antes de cada deploy, rode `npm run db:migrar` (no
    Railway isso já está no `railway.json` como pre-deploy).
 5. **Conferir.** `GET https://API/api/saude` deve responder `"status": "ok"`
-   com `"migrations": { "aplicadas": 17 }`.
+   com `"migrations": { "aplicadas": 18 }`.
 
 ## Variáveis de ambiente
 
@@ -47,9 +48,12 @@ Para conhecer o projeto: [README](../README.md) · [Arquitetura](01-arquitetura.
 |---|---|---|
 | `DATABASE_URL` | Sim | Conexão da aplicação, **com o usuário `app_web`** |
 | `DATABASE_URL_ADMIN` | Sim, no deploy | Conexão do dono, usada só pelas migrations |
+| `DATABASE_SSL_CA` | Se o certificado do banco não for de CA pública | CA ou certificado do servidor (PEM ou base64). O certificado é sempre verificado fora de `localhost` |
+| `DATABASE_SSL` | Não | `desativado` (sem TLS) ou `sem-verificacao` (último recurso) |
 | `URL_FRONTEND` | Sim | Endereço do front (CORS, link do QR de check-in, links dos e-mails). Mais de um: separados por vírgula; o primeiro é o principal |
-| `URL_API` | Recomendada | Endereço público desta API, para os links de download e do QR |
+| `URL_API` | Sim | Endereço público desta API, para os links de download e do QR |
 | `SEGREDO_LINKS` | Sim | Assina os links temporários de download. Gere com `openssl rand -hex 32` e não compartilhe |
+| `PROXIES_CONFIAVEIS` | Não | Proxies na frente da API (padrão `1`, o do Railway; `2` com CDN na frente). Define de onde sai o IP dos limites de tentativa |
 | `EMAIL_PROVEDOR` | Para e-mail | `resend` |
 | `RESEND_API_KEY` | Para e-mail | Chave `re_...` da Resend |
 | `EMAIL_REMETENTE` | Para e-mail | Ex.: `Fórum CTI <nao-responda@forum.dominio.org.br>` (do domínio verificado) |
@@ -79,7 +83,24 @@ Modelo completo e comentado: [`.env.example`](../.env.example).
 4. Teste com "Esqueci minha senha" na tela de login.
 
 Sem provedor configurado o sistema funciona, mas nenhum e-mail sai: as
-convocações aparecem com entrega "falhou" e os links de convite ficam no log.
+convocações aparecem com entrega "falhou", e convites e recuperação de senha
+não chegam. Em produção o conteúdo dos e-mails não vai para o log (ele leva
+o link com token).
+
+## Antes do primeiro deploy desta versão
+
+1. **TLS do banco.** Pela rede pública a conexão passou a verificar o
+   certificado. Confira o host das URLs do banco:
+   - `*.railway.internal` (rede privada do Railway): nada a fazer;
+   - banco com certificado de CA pública: nada a fazer;
+   - certificado próprio do provedor (ex.: `*.proxy.rlwy.net`, autoassinado):
+     troque pela URL interna ou defina `DATABASE_SSL_CA`.
+
+   Sem isso a aplicação e o `db:migrar` do pre-deploy não conectam.
+2. **`URL_API` e `SEGREDO_LINKS`** definidas (ver tabela acima).
+3. **`URL_FRONTEND`** com o endereço exato do front: pedidos que mudam dados
+   vindos de outra origem são recusados com 403 `ORIGEM_NAO_PERMITIDA`.
+4. **Migration 018** (limite de tentativas) é aplicada pelo `db:migrar`.
 
 ## Trazer os dados que já estão no ar
 

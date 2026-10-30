@@ -9,7 +9,7 @@ automatizar o registro de participação por QR Code.
 | Camada | Tecnologia |
 |---|---|
 | Runtime | Node.js 22+ |
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router, só rotas de API) |
 | Linguagem | JavaScript + JSDoc (sem TypeScript) |
 | Banco de dados | PostgreSQL 15+ |
 | Acesso ao banco | `pg` (sem ORM) |
@@ -19,19 +19,18 @@ automatizar o registro de participação por QR Code.
 | Testes | `node:test` + SQL puro |
 | CI | GitHub Actions |
 | Contrato da API | [`docs/04-contrato-de-api.md`](docs/04-contrato-de-api.md) |
-| Deploy previsto | Railway |
+| Deploy | Railway (guia para outra hospedagem: [`docs/14-implantacao.md`](docs/14-implantacao.md)) |
 
 ## Estado atual
 
 | | |
 |---|---|
-| **Endpoints** | 59 arquivos de rota sob `/api` (6 do painel público, sem login) |
-| **Migrations** | 11, aplicadas em ordem |
-| **Testes** | **297** — 120 de banco, 47 de domínio, 130 de integração |
-| **Última revisão** | Outubro/2026 — perfis do Fórum, eventos, QR e painel público ([o que mudou](docs/12-revisao-outubro.md)) |
+| **Endpoints** | 60 arquivos de rota sob `/api` (6 do painel público, sem login) + o contrato `/api/governanca` |
+| **Migrations** | 18, aplicadas em ordem |
+| **Testes** | **399** — 129 de banco, 69 de domínio, 201 de integração |
 | **Casos de teste (QA)** | 62, em [`qa/02-casos-de-teste.csv`](qa/02-casos-de-teste.csv) |
 | **Verificação de saúde** | `GET /api/saude` — responde `{"status":"ok"}` |
-| **Aplicação no ar** | ainda não publicada — o passo está em [`docs/03-ambientes.md`](docs/03-ambientes.md) |
+| **Aplicação no ar** | Railway; implantação em outra hospedagem: [`docs/14-implantacao.md`](docs/14-implantacao.md) |
 
 ## Começar aqui
 
@@ -90,8 +89,8 @@ mudar — é a matriz de permissões funcionando.
 eco_inovacao/
 ├── src/
 │   ├── app/                        # ① Apresentação — só rotas HTTP
-│   │   └── api/                    #    27 rotas REST (não há telas: só back-end)
-│   ├── middleware.js               # CORS + exige sessão fora das rotas públicas
+│   │   └── api/                    #    rotas REST (não há telas: só back-end)
+│   ├── proxy.js                    # CORS, origem (CSRF), tamanho do corpo, exige sessão
 │   ├── aplicacao/                  # ② Casos de uso — uma ação por arquivo
 │   │   ├── autenticacao/           #    entrar, perfil, recuperar senha, convite
 │   │   ├── usuarios/               #    contas e permissões (admin)
@@ -158,7 +157,7 @@ nada de ninguém, e por isso pode ser testado sem banco, sem rede e sem mock.
 Requisição HTTP
       │
       ▼
-  middleware.js       ← exige sessão válida fora das rotas públicas
+  proxy.js            ← CORS, origem (CSRF), tamanho do corpo, cookie de sessão
       │
       ▼
   src/app/api/        ← ① Apresentação: lê o corpo, devolve status e JSON
@@ -214,13 +213,13 @@ esqueça o `exigir()`.
 |---|---|
 | `npm run dev` | Sobe a aplicação em desenvolvimento |
 | `npm run build` | Compila para produção |
-| `npm run db:testar` | Recria o banco, aplica migrations + seed e roda os 120 testes SQL |
-| `npm run db:migrar` | Aplica só as migrations que ainda não rodaram *(bash)* |
+| `npm run db:testar` | Recria o banco, aplica migrations + seed e roda os testes SQL |
+| `npm run db:migrar` | Aplica só as migrations que ainda não rodaram |
 | `npm run db:resetar` | Apaga e recria o banco local *(bash; recusa fora de localhost)* |
-| `npm run test:dominio` | 47 testes de regra pura — não precisam de banco |
-| `npm run test:integracao` | 130 testes contra um Postgres de verdade |
+| `npm run test:dominio` | Regra pura e configuração — não precisam de banco |
+| `npm run test:integracao` | Contra um Postgres de verdade |
 | `npm test` | Domínio + integração |
-| `npm run lint` | ESLint |
+| `npm run lint` | ESLint (`eslint .`, configuração em `eslint.config.mjs`) |
 
 `db:testar` é o único que roda igual no Windows e no Linux: é Node puro, não
 precisa de `bash` nem de `psql` no PATH.
@@ -271,15 +270,31 @@ também como JSDoc.
 ## Mexer no banco
 
 Crie o próximo arquivo numerado em `banco/migrations/` — hoje a última é a
-`011_painel_publico.sql`, então a próxima é a `012_*.sql` — e rode:
+`018_limite_tentativas_acesso.sql`, então a próxima é a `019_*.sql` — e rode:
 
 ```bash
-npm run db:testar        # recria do zero e roda os 120 testes SQL
+npm run db:testar        # recria do zero e roda os testes SQL
 ```
 
 **Nunca edite uma migration já aplicada em outro ambiente.** O script guarda numa
 tabela quais arquivos já rodaram; editar um deles deixa o banco de cada pessoa em
 um estado diferente, e a diferença só aparece em produção.
+
+## Segurança
+
+| Ameaça | Defesa | Onde |
+|---|---|---|
+| Acesso a dado de outra instituição | RLS no PostgreSQL; a aplicação conecta como `app_web`, que não é dono | `banco/migrations`, `comUsuario()` |
+| CSRF (cookie `SameSite=None` entre domínios) | Método que muda estado só de origem liberada em `URL_FRONTEND` | `src/proxy.js` |
+| Força bruta e disparo de e-mail | Limite por IP e por conta no login, na recuperação e na redefinição de senha, guardado no banco | `seguranca/tentativas.js`, migration 018 |
+| IP forjado no `X-Forwarded-For` | Vale o endereço acrescentado pelo proxy (`PROXIES_CONFIAVEIS`) | `http/limite.js` |
+| Interceptação da conexão com o banco | TLS com certificado verificado fora de `localhost` | `banco/ssl.js` |
+| Token de recuperação no log | Sem provedor de e-mail, produção não imprime o corpo | `email/enviar.js` |
+| Arquivo malicioso | Tipo conferido pelos bytes; download com `nosniff` e CSP `sandbox`; link assinado de 15 min, revalidado no RLS | `dominio/arquivos.js`, `http/arquivo.js` |
+| Backup vazado | Dump criptografado com age antes de sair do runner, em bucket privado | `.github/workflows/backup.yml` |
+
+Variáveis obrigatórias em produção e o que configurar antes do deploy:
+[`docs/14-implantacao.md`](docs/14-implantacao.md).
 
 ## Documentos
 
