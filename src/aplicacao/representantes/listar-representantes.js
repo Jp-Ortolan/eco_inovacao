@@ -12,7 +12,7 @@ import { z } from 'zod';
 
 export const esquemaFiltroRepresentante = z.object({
   busca: z.string().trim().max(120).optional(),
-  instituicaoId: z.string().uuid().optional(),
+  instituicaoId: z.string().guid().optional(),
   // 'ativo' traz só quem tem vínculo vigente; 'todos' inclui quem já saiu.
   vinculo: z.enum(['ativo', 'encerrado', 'todos']).default('ativo'),
   pagina: z.coerce.number().int().min(1).default(1),

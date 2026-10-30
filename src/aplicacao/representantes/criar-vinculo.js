@@ -15,16 +15,16 @@ import { exigir, validar } from '@/aplicacao/guarda.js';
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 
 export const esquemaVinculo = z.object({
-  pessoaId: z.string().uuid('Selecione o representante.'),
-  instituicaoId: z.string().uuid('Selecione a instituição.'),
+  pessoaId: z.string().guid('Selecione o representante.'),
+  instituicaoId: z.string().guid('Selecione a instituição.'),
   cargo: z.string().trim().max(120).optional().transform((v) => (v || null)),
   dataInicio: z.string().regex(DATA, 'Informe a data de início (AAAA-MM-DD).').optional(),
   observacoes: z.string().trim().max(2000).optional().transform((v) => (v || null)),
   tipoRepresentacao: z.enum(['titular', 'suplente', 'integrante', 'convidado'], {
-    errorMap: () => ({ message: 'Tipo inválido: titular, suplente, integrante ou convidado.' }),
+    message: 'Tipo inválido: titular, suplente, integrante ou convidado.',
   }).optional().default('integrante'),
   cargoForum: z.string().trim().max(120).optional().transform((v) => (v || null)),
-  oficioDocumentoId: z.string().uuid().optional(),
+  oficioDocumentoId: z.string().guid().optional(),
   grupoTrabalhoIds: z.array(z.coerce.number().int().positive()).max(30).optional(),
 });
 

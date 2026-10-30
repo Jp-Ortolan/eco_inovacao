@@ -13,7 +13,7 @@ import { exigir, validar } from '@/aplicacao/guarda.js';
 
 export const esquemaResposta = z.object({
   status: z.enum(['pendente', 'confirmado', 'recusado'], {
-    errorMap: () => ({ message: 'Resposta inválida.' }),
+    message: 'Resposta inválida.',
   }),
   observacoes: z.string().trim().max(500).optional().transform((v) => (v || null)),
 });

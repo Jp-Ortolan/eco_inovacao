@@ -63,7 +63,7 @@ const objetoReuniao = z.object({
   numero: z.coerce.number().int().positive('O número precisa ser maior que zero.')
     .optional().nullable(),
   modalidade: z.enum(['presencial', 'online', 'hibrida'], {
-    errorMap: () => ({ message: 'Modalidade: presencial, online ou hibrida.' }),
+    message: 'Modalidade: presencial, online ou hibrida.',
   }).optional(),
   responsavel: opcional(200),
   publicoAlvo: opcional(500),
@@ -106,7 +106,7 @@ export const esquemaEditarReuniao = comCoerenciaDeHorario(objetoReuniao.partial(
 
 export const esquemaStatusReuniao = z.object({
   status: z.enum(['rascunho', 'agendada', 'em_andamento', 'cancelada'], {
-    errorMap: () => ({ message: 'Situação inválida.' }),
+    message: 'Situação inválida.',
   }),
   motivo: z.string().trim().max(300).optional().nullable(),
 });
@@ -121,7 +121,7 @@ export const esquemaFiltroReuniao = z.object({
   periodo: z.enum(['proximas', 'passadas', 'todas']).default('todas'),
   de: z.string().regex(DATA).optional(),
   ate: z.string().regex(DATA).optional(),
-  instituicaoId: z.string().uuid().optional(),
+  instituicaoId: z.string().guid().optional(),
   ordem: z.enum(['asc', 'desc']).default('desc'),
   pagina: z.coerce.number().int().min(1).default(1),
   porPagina: z.coerce.number().int().min(1).max(100).default(20),

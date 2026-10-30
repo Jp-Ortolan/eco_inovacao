@@ -98,7 +98,7 @@ const esquema = z.object({
     .refine((v) => !v || /^\S+@\S+\.\S+$/.test(v), 'E-mail inválido.'),
   instituicaoId: z.string().trim().optional().nullable(),
   modalidade: z.enum(['presencial', 'online']).optional().nullable(),
-  assinatura: z.string({ required_error: 'Digite seu nome completo como assinatura.' })
+  assinatura: z.string({ message: 'Digite seu nome completo como assinatura.' })
     .trim().min(3, 'Digite seu nome completo como assinatura.').max(200),
   tipo: z.string().optional(),  // ignorado: o tipo efetivo é decidido aqui
 });

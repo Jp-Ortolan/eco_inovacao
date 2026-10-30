@@ -22,7 +22,7 @@ const LISTAS = {
 
 export const esquemaDominio = z.object({
   lista: z.enum(/** @type {[string, ...string[]]} */ (Object.keys(LISTAS)), {
-    errorMap: () => ({ message: `Lista inválida: ${Object.keys(LISTAS).join(', ')}.` }),
+    message: `Lista inválida: ${Object.keys(LISTAS).join(', ')}.`,
   }),
   id: z.coerce.number().int().positive().optional(),
   nome: z.string().trim().min(2, 'Informe o nome.').max(120).optional(),

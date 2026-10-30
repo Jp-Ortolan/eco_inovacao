@@ -29,7 +29,7 @@ const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const esquema = z.object({
   inicio: z.string().regex(DATA, 'Informe a data inicial.'),
   fim: z.string().regex(DATA, 'Informe a data final.'),
-  formato: z.enum(['xlsx', 'pdf'], { errorMap: () => ({ message: 'Formato: xlsx ou pdf.' }) }),
+  formato: z.enum(['xlsx', 'pdf'], { message: 'Formato: xlsx ou pdf.' }),
 }).refine((d) => d.fim >= d.inicio, { message: 'A data final não pode ser antes da inicial.', path: ['fim'] });
 
 const ROTULO_STATUS = { presente: 'Presente', ausente: 'Ausente', justificada: 'Justificada', prevista: 'Prevista', cancelada: 'Cancelada' };

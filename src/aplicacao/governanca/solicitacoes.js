@@ -167,7 +167,7 @@ async function detalhar(tx, u, base, s, fichas) {
 
 const esquemaDecisao = z.object({
   decisao: z.enum(['aprovar', 'rejeitar', 'recusar'], {
-    errorMap: () => ({ message: 'Decida "aprovar" ou "rejeitar".' }),
+    message: 'Decida "aprovar" ou "rejeitar".',
   }),
   parecer: z.string().trim().max(2000).optional().nullable(),
   versaoRegistro: z.coerce.number().int().positive().optional(),

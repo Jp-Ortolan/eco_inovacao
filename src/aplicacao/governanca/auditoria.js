@@ -61,7 +61,7 @@ const esquemaFiltro = z.object({
   inicio: z.string().regex(DATA, 'Data inicial inválida.').optional().or(z.literal('')),
   fim: z.string().regex(DATA, 'Data final inválida.').optional().or(z.literal('')),
   recurso: z.enum(/** @type {[string, ...string[]]} */ (Object.keys(RECURSOS)), {
-    errorMap: () => ({ message: 'Recurso inválido.' }),
+    message: 'Recurso inválido.',
   }).optional().or(z.literal('')),
   autor: z.string().trim().max(120).optional(),
   cursor: z.string().trim().max(40).optional(),

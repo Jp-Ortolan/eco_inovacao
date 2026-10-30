@@ -16,10 +16,10 @@ import { exigir, validar } from '@/aplicacao/guarda.js';
 
 export const esquemaConvite = z.object({
   // Sem vinculoIds nem instituicaoIds, convida todo mundo que está ativo.
-  vinculoIds: z.array(z.string().uuid()).min(1).max(500).optional(),
+  vinculoIds: z.array(z.string().guid()).min(1).max(500).optional(),
   // "Instituições convocadas": todos os representantes ativos delas. Com
   // apenasTitulares, só titular e suplente (reunião de diretoria, por exemplo).
-  instituicaoIds: z.array(z.string().uuid()).min(1).max(500).optional(),
+  instituicaoIds: z.array(z.string().guid()).min(1).max(500).optional(),
   apenasTitulares: z.boolean().optional().default(false),
 });
 

@@ -13,9 +13,9 @@ import { ErroDeNegocio } from '@/dominio/erros.js';
 import { exigir, validar } from '@/aplicacao/guarda.js';
 
 export const esquemaMarcacao = z.object({
-  pessoaId: z.string().uuid('Selecione o participante.'),
+  pessoaId: z.string().guid('Selecione o participante.'),
   status: z.enum(['presente', 'ausente', 'justificado'], {
-    errorMap: () => ({ message: 'Situação inválida. Use presente, ausente ou justificado.' }),
+    message: 'Situação inválida. Use presente, ausente ou justificado.',
   }),
   observacoes: z.string().trim().max(500).optional().transform((v) => (v || null)),
   modo: z.enum(['presencial', 'online']).optional(),

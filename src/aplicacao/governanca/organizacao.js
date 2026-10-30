@@ -114,7 +114,7 @@ const esquemaConvocacao = z.object({
   assunto: z.string().trim().min(3, 'Informe o assunto.').max(200),
   mensagem: z.string().trim().min(3, 'Escreva a mensagem.').max(5000),
   prazoResposta: z.string().trim().optional().nullable().transform((v) => v || null),
-  instituicoes: z.array(z.string().uuid('Instituição inválida.'), { required_error: 'Selecione as instituições.' })
+  instituicoes: z.array(z.string().guid('Instituição inválida.'), { message: 'Selecione as instituições.' })
     .min(1, 'Selecione ao menos uma instituição.').max(500),
   chaveOperacao: z.string().optional().nullable(),
 });
@@ -244,9 +244,9 @@ async function enviarConvocacoes(u, ids, a, d, prazo) {
 const esquemaEncaminhamento = z.object({
   titulo: z.string().trim().min(3, 'Informe o título.').max(200),
   descricao: z.string().trim().max(5000).optional().nullable().transform((v) => v || null),
-  responsavelId: z.string({ required_error: 'Selecione o responsável.' }).uuid('Selecione o responsável.'),
-  prazo: z.string({ required_error: 'Informe o prazo.' }).regex(DATA, 'Informe o prazo.'),
-  status: z.enum(['pendente', 'em_andamento', 'concluido', 'cancelado'], { errorMap: () => ({ message: 'Situação inválida.' }) })
+  responsavelId: z.string({ message: 'Selecione o responsável.' }).guid('Selecione o responsável.'),
+  prazo: z.string({ message: 'Informe o prazo.' }).regex(DATA, 'Informe o prazo.'),
+  status: z.enum(['pendente', 'em_andamento', 'concluido', 'cancelado'], { message: 'Situação inválida.' })
     .optional().default('pendente'),
   resultado: z.string().trim().max(5000).optional().nullable().transform((v) => v || null),
   versaoRegistro: z.coerce.number().int().positive().optional(),
@@ -375,8 +375,8 @@ export async function convocacoesDaInstituicao(usuario, pedida) {
 }
 
 const esquemaResposta = z.object({
-  resposta: z.enum(['confirmada', 'recusada'], { errorMap: () => ({ message: 'Confirme ou informe a ausência.' }) }),
-  representanteId: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform((v) => v || null),
+  resposta: z.enum(['confirmada', 'recusada'], { message: 'Confirme ou informe a ausência.' }),
+  representanteId: z.union([z.string().guid(), z.literal(''), z.null()]).optional().transform((v) => v || null),
   justificativa: z.string().trim().max(2000).optional().nullable().transform((v) => v || null),
   versaoRegistro: z.coerce.number().int().positive().optional(),
 });

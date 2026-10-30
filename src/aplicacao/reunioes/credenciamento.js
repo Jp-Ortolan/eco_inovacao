@@ -20,7 +20,7 @@ import { urlDoFront } from '@/infraestrutura/http/front.js';
 
 export const esquemaCredenciamento = z.object({
   acao: z.enum(['abrir', 'fechar', 'novo_qr'], {
-    errorMap: () => ({ message: 'Ação inválida: abrir, fechar ou novo_qr.' }),
+    message: 'Ação inválida: abrir, fechar ou novo_qr.',
   }),
   // Aproveita o mesmo botão para decidir se convidado avulso pode entrar.
   permiteConvidado: z.boolean().optional(),
