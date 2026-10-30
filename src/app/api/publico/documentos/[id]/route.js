@@ -13,12 +13,13 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function GET(req, { params }) {
+  const { id } = await params;
   try {
     await exigirDentroDoLimite('publico', ipDaRequisicao(req));
-    const d = await documentoPublico(params.id);
+    const d = await documentoPublico(id);
     return respostaDeArquivo({ ...d, nome: sanitizarNome(d.nome), publico: true });
   } catch (e) {
     return falha(e);

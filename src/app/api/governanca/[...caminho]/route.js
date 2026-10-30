@@ -9,8 +9,8 @@ import '@/aplicacao/governanca/rotas.js';
 
 export const dynamic = 'force-dynamic';
 
-/** @param {import('next/server').NextRequest} req @param {{ params: { caminho: string[] } }} c */
-const tratar = (req, { params }) => despachar(req, params.caminho ?? []);
+/** @param {import('next/server').NextRequest} req @param {{ params: Promise<{ caminho: string[] }> }} c */
+const tratar = async (req, { params }) => despachar(req, (await params).caminho ?? []);
 
 export const GET = tratar;
 export const POST = tratar;

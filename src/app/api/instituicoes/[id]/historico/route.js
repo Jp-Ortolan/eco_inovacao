@@ -14,12 +14,13 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function GET(req, { params }) {
+  const { id } = await params;
   try {
     const filtros = Object.fromEntries(req.nextUrl.searchParams);
-    return ok(await obterHistoricoInstituicao(await usuarioAtual(), params.id, filtros));
+    return ok(await obterHistoricoInstituicao(await usuarioAtual(), id, filtros));
   } catch (e) {
     return falha(e);
   }

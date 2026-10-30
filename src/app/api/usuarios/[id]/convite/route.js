@@ -11,11 +11,12 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} _req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function POST(_req, { params }) {
+  const { id } = await params;
   try {
-    return ok(await reenviarConvite(await usuarioAtual(), params.id));
+    return ok(await reenviarConvite(await usuarioAtual(), id));
   } catch (e) {
     return falha(e);
   }

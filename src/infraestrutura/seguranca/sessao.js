@@ -39,14 +39,14 @@ export const COOKIE_SESSAO = 'sessao';
 /**
  * A requisição atual vem de outro site?
  *
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
-function requisicaoEntreDominios() {
+async function requisicaoEntreDominios() {
   if (process.env.COOKIE_CROSS_SITE === '1') return true;
 
   let h;
   try {
-    h = headers();
+    h = await headers();
   } catch {
     return false; // fora de requisição (teste de integração): mesmo site
   }
@@ -76,8 +76,8 @@ function requisicaoEntreDominios() {
  *
  * @param {Date} expira
  */
-function opcoesDoCookie(expira) {
-  const entre = requisicaoEntreDominios();
+async function opcoesDoCookie(expira) {
+  const entre = await requisicaoEntreDominios();
   return {
     httpOnly: true,
     sameSite: /** @type {'none'|'lax'} */ (entre ? 'none' : 'lax'),
@@ -107,7 +107,7 @@ export async function abrirSessao(usuarioId, ip, agente) {
     usuarioId, hashToken(token), expira.toISOString(), ip ?? null, agente ?? null,
   ]);
 
-  cookies().set(COOKIE_SESSAO, token, opcoesDoCookie(expira));
+  (await cookies()).set(COOKIE_SESSAO, token, await opcoesDoCookie(expira));
 }
 
 /**
@@ -118,11 +118,12 @@ export async function abrirSessao(usuarioId, ip, agente) {
  * @returns {Promise<void>}
  */
 export async function encerrarSessao() {
-  const token = cookies().get(COOKIE_SESSAO)?.value;
+  const jar = await cookies();
+  const token = jar.get(COOKIE_SESSAO)?.value;
   if (token) {
     await consulta('select auth_encerrar_sessao($1)', [hashToken(token)]);
   }
-  cookies().set(COOKIE_SESSAO, '', { ...opcoesDoCookie(new Date(0)), maxAge: 0 });
+  jar.set(COOKIE_SESSAO, '', { ...(await opcoesDoCookie(new Date(0))), maxAge: 0 });
 }
 
 /**
@@ -135,7 +136,8 @@ export async function encerrarSessao() {
  * @returns {Promise<UsuarioSessao|null>}
  */
 export async function usuarioAtual() {
-  const token = cookies().get(COOKIE_SESSAO)?.value;
+  const jar = await cookies();
+  const token = jar.get(COOKIE_SESSAO)?.value;
   if (!token) return null;
 
   const hash = hashToken(token);
@@ -151,7 +153,7 @@ export async function usuarioAtual() {
     const expira = novaValidade();
     await consulta('select auth_renovar_sessao($1, $2)', [hash, expira.toISOString()]);
     try {
-      cookies().set(COOKIE_SESSAO, token, opcoesDoCookie(expira));
+      jar.set(COOKIE_SESSAO, token, await opcoesDoCookie(expira));
     } catch {
       // Fora de Route Handler o cookie é só leitura. A sessão no banco já foi
       // estendida; o cookie é atualizado na próxima chamada de rota.

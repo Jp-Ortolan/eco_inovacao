@@ -14,11 +14,12 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} _req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function GET(_req, { params }) {
+  const { id } = await params;
   try {
-    const { mimeType, conteudo } = await logoPublica(params.id);
+    const { mimeType, conteudo } = await logoPublica(id);
     return respostaDeArquivo({ nome: 'logo', mimeType, conteudo, inline: true, publico: true });
   } catch (e) {
     return falha(e);

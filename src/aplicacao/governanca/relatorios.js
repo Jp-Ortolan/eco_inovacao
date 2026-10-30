@@ -38,7 +38,6 @@ const ROTULO_STATUS = { presente: 'Presente', ausente: 'Ausente', justificada: '
 export function celulaSegura(v) {
   if (v === null || v === undefined) return '';
   if (typeof v === 'number' || typeof v === 'boolean') return v;
-  // eslint-disable-next-line no-control-regex
   const s = String(v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
   return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
 }
