@@ -27,7 +27,7 @@ automatizar o registro de participação por QR Code.
 |---|---|
 | **Endpoints** | 60 arquivos de rota sob `/api` (6 do painel público, sem login) + o contrato `/api/governanca` |
 | **Migrations** | 18, aplicadas em ordem |
-| **Testes** | **399** — 129 de banco, 69 de domínio, 201 de integração |
+| **Testes** | **400** — 129 de banco, 70 de domínio, 201 de integração |
 | **Casos de teste (QA)** | 62, em [`qa/02-casos-de-teste.csv`](qa/02-casos-de-teste.csv) |
 | **Verificação de saúde** | `GET /api/saude` — responde `{"status":"ok"}` |
 | **Aplicação no ar** | Railway; implantação em outra hospedagem: [`docs/14-implantacao.md`](docs/14-implantacao.md) |

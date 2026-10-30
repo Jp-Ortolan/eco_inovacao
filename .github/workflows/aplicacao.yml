@@ -8,6 +8,11 @@ on:
     branches: [main, develop]
   pull_request:
 
+
+# O CI só lê o código; o token do Actions não precisa de escrita.
+permissions:
+  contents: read
+
 jobs:
   qualidade:
     name: Lint, testes e build

@@ -11,6 +11,11 @@ on:
   pull_request:
     paths: ['banco/**', 'testes/**', 'scripts/**', 'src/**', '.github/workflows/banco.yml']
 
+
+# O CI só lê o código; o token do Actions não precisa de escrita.
+permissions:
+  contents: read
+
 jobs:
   migrations-e-testes:
     name: Migrations + testes de regra de negócio
