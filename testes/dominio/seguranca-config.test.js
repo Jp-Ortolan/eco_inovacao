@@ -32,6 +32,15 @@ describe('TLS do PostgreSQL', () => {
     assert.equal(prepararConexao('postgresql:///db?host=/var/run/postgresql', {}).ssl, false);
   });
 
+  test('rede privada do Railway mantém TLS sem verificar; o proxy público do Railway verifica', () => {
+    assert.deepEqual(prepararConexao('postgresql://u:s@postgres.railway.internal:5432/railway', {}).ssl,
+      { rejectUnauthorized: false });
+    assert.deepEqual(prepararConexao('postgresql://u:s@junction.proxy.rlwy.net:12345/railway', {}).ssl,
+      { rejectUnauthorized: true });
+    assert.deepEqual(prepararConexao('postgresql://u:s@railway.internal.atacante.com/db', {}).ssl,
+      { rejectUnauthorized: true });
+  });
+
   test('"localhost" no meio do nome não conta como local', () => {
     const { ssl } = prepararConexao('postgresql://u:s@localhost.atacante.com/db', {});
     assert.deepEqual(ssl, { rejectUnauthorized: true });

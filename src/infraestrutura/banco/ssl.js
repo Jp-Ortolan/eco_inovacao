@@ -1,27 +1,31 @@
 /**
  * TLS da conexão com o PostgreSQL. Usado pela aplicação e pelos scripts.
  *
- * Fora de endereço local, o certificado do servidor é VERIFICADO por padrão:
- * sem verificação, quem estiver no caminho se passa pelo banco e lê a senha e
- * os dados. As saídas são explícitas:
+ * Pela rede pública, o certificado do servidor é VERIFICADO: sem isso, quem
+ * estiver no caminho se passa pelo banco e lê a senha e os dados.
  *
- *   DATABASE_SSL_CA=<PEM ou PEM em base64>   CA (ou o próprio certificado, se
- *                                            for autoassinado) a confiar
- *   DATABASE_SSL=desativado                  sem TLS — só em rede privada
- *                                            (ex.: *.railway.internal)
- *   DATABASE_SSL=sem-verificacao             TLS sem conferir o certificado.
- *                                            Inseguro; avisa no log
+ *   localhost / soquete unix     sem TLS
+ *   *.railway.internal           TLS sem verificar o certificado (autoassinado).
+ *                                A rede privada do Railway é um túnel WireGuard
+ *                                que já autentica e criptografa os dois lados
+ *   qualquer outro endereço      TLS com certificado verificado
  *
- * O `sslmode` da URL é tirado antes de chegar ao `pg`: o driver deixa o da URL
- * sobrepor o objeto `ssl`, e a CA configurada se perderia. `sslmode=disable` e
- * `sslmode=no-verify` na URL valem como os dois últimos casos acima.
+ * Ajustes explícitos:
+ *   DATABASE_SSL_CA=<PEM ou base64>   CA a confiar (ou o certificado autoassinado);
+ *                                     com ela, verifica também na rede privada
+ *   DATABASE_SSL=desativado           sem TLS
+ *   DATABASE_SSL=sem-verificacao      TLS sem verificar. Inseguro na rede
+ *                                     pública; avisa no log
+ *
+ * O `sslmode` da URL é tirado antes de chegar ao `pg`, que o deixaria
+ * sobrepor esta configuração (e descartar a CA). `sslmode=disable` e
+ * `sslmode=no-verify` valem como os dois últimos ajustes acima.
  */
 
-/** Loopback ou soquete unix: não há rede no caminho. */
-function ehLocal(url) {
-  if (/[?&]host=(\/|%2F)/i.test(url)) return true;
-  const host = /^postgres(?:ql)?:\/\/(?:[^@/]*@)?(\[[^\]]*\]|[^/:?]*)/i.exec(url)?.[1] ?? '';
-  return ['', 'localhost', '127.0.0.1', '[::1]'].includes(host.toLowerCase());
+/** @param {string} url */
+function hostDe(url) {
+  if (/[?&]host=(\/|%2F)/i.test(url)) return 'localhost';
+  return (/^postgres(?:ql)?:\/\/(?:[^@/]*@)?(\[[^\]]*\]|[^/:?]*)/i.exec(url)?.[1] ?? '').toLowerCase();
 }
 
 let avisou = false;
@@ -47,9 +51,14 @@ export function prepararConexao(url, env = process.env) {
 
   const modo = (env.DATABASE_SSL ?? '').toLowerCase()
     || (modoUrl === 'disable' ? 'desativado' : modoUrl === 'no-verify' ? 'sem-verificacao' : '');
+  const host = hostDe(url);
 
   if (modo === 'desativado') return { connectionString, ssl: false };
-  if (!modo && ehLocal(url) && !env.DATABASE_SSL_CA) return { connectionString, ssl: false };
+
+  if (!modo && !env.DATABASE_SSL_CA) {
+    if (['', 'localhost', '127.0.0.1', '[::1]'].includes(host)) return { connectionString, ssl: false };
+    if (host.endsWith('.railway.internal')) return { connectionString, ssl: { rejectUnauthorized: false } };
+  }
 
   if (modo === 'sem-verificacao') {
     if (!avisou) {
