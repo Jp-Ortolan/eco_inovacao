@@ -54,8 +54,8 @@ export async function listarInstituicoes(usuario, filtros) {
   };
 
   if (f.busca) {
-// O campo é um só e procura por nome OU CNPJ. A regra é a ausência de letra:
-// qualquer letra significa nome, inclusive em Colégio 31 de Março.
+    // O campo é um só e procura por nome OU CNPJ. A regra é a ausência de letra:
+    // qualquer letra significa nome, inclusive em Colégio 31 de Março.
     const pareceCnpj = /^[\d.\-/\s]+$/.test(f.busca);
     const digitos = apenasDigitos(f.busca);
 

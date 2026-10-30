@@ -16,11 +16,12 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} _req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function GET(_req, { params }) {
+  const { id } = await params;
   try {
-    const { mimeType, conteudo } = await baixarLogo(await usuarioAtual(), params.id);
+    const { mimeType, conteudo } = await baixarLogo(await usuarioAtual(), id);
     return respostaDeArquivo({ nome: 'logo', mimeType, conteudo, inline: true });
   } catch (e) {
     return falha(e);
@@ -29,9 +30,10 @@ export async function GET(_req, { params }) {
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function POST(req, { params }) {
+  const { id } = await params;
   try {
     const usuario = await usuarioAtual();
     const formulario = await req.formData().catch(() => null);
@@ -48,7 +50,7 @@ export async function POST(req, { params }) {
       mime: enviado.type || 'application/octet-stream',
       conteudo: Buffer.from(await enviado.arrayBuffer()),
     };
-    return ok(await definirLogo(usuario, params.id, arquivo), 201);
+    return ok(await definirLogo(usuario, id, arquivo), 201);
   } catch (e) {
     return falha(e);
   }

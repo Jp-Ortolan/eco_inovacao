@@ -26,6 +26,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import pg from 'pg';
+import { prepararConexao } from '@/infraestrutura/banco/ssl.js';
 import { gerarHash, conferir } from '../../src/infraestrutura/seguranca/senha.js';
 import { gerarToken, hashToken } from '../../src/infraestrutura/seguranca/tokens.js';
 
@@ -49,11 +50,7 @@ let usuarioId = '';
 
 /** @param {string} url */
 const conectar = async (url) => {
-  const c = new Client({
-    connectionString: url,
-    ssl: /localhost|127\.0\.0\.1|host=\/|sslmode=disable/.test(url)
-      ? undefined : { rejectUnauthorized: false },
-  });
+  const c = new Client(prepararConexao(url));
   await c.connect();
   return c;
 };

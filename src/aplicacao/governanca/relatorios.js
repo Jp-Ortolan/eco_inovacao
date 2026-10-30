@@ -29,7 +29,7 @@ const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const esquema = z.object({
   inicio: z.string().regex(DATA, 'Informe a data inicial.'),
   fim: z.string().regex(DATA, 'Informe a data final.'),
-  formato: z.enum(['xlsx', 'pdf'], { errorMap: () => ({ message: 'Formato: xlsx ou pdf.' }) }),
+  formato: z.enum(['xlsx', 'pdf'], { message: 'Formato: xlsx ou pdf.' }),
 }).refine((d) => d.fim >= d.inicio, { message: 'A data final não pode ser antes da inicial.', path: ['fim'] });
 
 const ROTULO_STATUS = { presente: 'Presente', ausente: 'Ausente', justificada: 'Justificada', prevista: 'Prevista', cancelada: 'Cancelada' };
@@ -38,7 +38,6 @@ const ROTULO_STATUS = { presente: 'Presente', ausente: 'Ausente', justificada: '
 export function celulaSegura(v) {
   if (v === null || v === undefined) return '';
   if (typeof v === 'number' || typeof v === 'boolean') return v;
-  // eslint-disable-next-line no-control-regex
   const s = String(v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
   return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
 }

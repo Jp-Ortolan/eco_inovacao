@@ -17,6 +17,7 @@
 import { createInterface } from 'node:readline';
 import { hash } from '@node-rs/argon2';
 import pg from 'pg';
+import { prepararConexao } from '../src/infraestrutura/banco/ssl.js';
 
 const [nome, email, papel = 'diretoria', instituicaoId = null] = process.argv.slice(2);
 
@@ -82,17 +83,7 @@ if (senha !== confirmacao) {
 
 const senhaHash = await hash(senha, { memoryCost: 19456, timeCost: 2, parallelism: 1 });
 
-/**
- * O Railway exige TLS e apresenta certificado próprio; Postgres local
- * normalmente nem tem TLS ligado. A regra: só não usa TLS quando é claramente
- * local — endereço de loopback, soquete unix, ou sslmode=disable explícito.
- */
-function configSsl(url) {
-  const local = /localhost|127\.0\.0\.1|host=\/|sslmode=disable/.test(url);
-  return local ? undefined : { rejectUnauthorized: false };
-}
-
-const cliente = new pg.Client({ connectionString: url, ssl: configSsl(url) });
+const cliente = new pg.Client(prepararConexao(url));
 
 await cliente.connect();
 try {

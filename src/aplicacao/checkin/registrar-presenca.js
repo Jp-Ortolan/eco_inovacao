@@ -25,7 +25,7 @@ const extras = {
 
 export const esquemaPresenca = z.union([
   z.object({ proprio: z.literal(true), ...extras }),
-  z.object({ pessoaId: z.string().uuid(), ...extras }),
+  z.object({ pessoaId: z.string().guid(), ...extras }),
   z.object({
     convidado: z.object({
       nome: z.string().trim().min(3, 'Informe seu nome completo.'),

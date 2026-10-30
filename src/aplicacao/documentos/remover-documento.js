@@ -22,8 +22,8 @@ export async function removerDocumento(usuario, id) {
     );
     if (!d) throw new ErroDeNegocio('NAO_ENCONTRADO', 'Documento não encontrado.');
 
-// Explícito mesmo com o cascade: com armazenamento externo o banco não apagaria
-// o objeto, e a ordem certa (conteúdo, depois metadado) já fica escrita.
+    // Explícito mesmo com o cascade: com armazenamento externo o banco não apagaria
+    // o objeto, e a ordem certa (conteúdo, depois metadado) já fica escrita.
     await remover(tx, { documentoId: d.id, caminho: d.storage_path });
 
     const linha = await tx.consultaUm(

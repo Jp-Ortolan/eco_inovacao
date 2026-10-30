@@ -1,13 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
 
-  // Pacotes que só rodam no servidor e trazem binário nativo ou dependem de
-  // módulos do Node. Sem isto, o empacotador tenta ler o .node do Argon2 como
-  // se fosse JavaScript e o build falha. O PDFKit lê as fontes do próprio
-  // diretório em tempo de execução, e o ExcelJS é grande: ficam fora do bundle.
+  // Só rodam no servidor e trazem binário nativo (Argon2) ou leem arquivos do
+  // próprio pacote em tempo de execução (PDFKit): ficam fora do bundle.
+  serverExternalPackages: ['@node-rs/argon2', 'pg', 'pdfkit', 'exceljs', 'qrcode'],
+
   experimental: {
-    serverComponentsExternalPackages: ['@node-rs/argon2', 'pg', 'pdfkit', 'exceljs', 'qrcode'],
+    // O proxy (src/proxy.js) faz o Next guardar o corpo em memória; acima deste
+    // teto ele é cortado em silêncio. O proxy recusa antes o que passar disto.
+    proxyClientMaxBodySize: '25mb',
   },
 };
 

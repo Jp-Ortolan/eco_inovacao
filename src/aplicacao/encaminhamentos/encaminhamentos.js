@@ -1,5 +1,5 @@
 /**
- * CASOS DE USO — Encaminhamentos da reunião (revisão de outubro).
+ * CASOS DE USO — Encaminhamentos da reunião.
  *
  * O que a reunião decidiu, com responsável e prazo. Quem enxerga a reunião
  * enxerga os encaminhamentos dela; só a gestão escreve.
@@ -15,7 +15,7 @@ const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const objeto = z.object({
   descricao: z.string().trim().min(3, 'Descreva o encaminhamento.').max(2000),
   responsavel: z.string().trim().max(200).optional().transform((v) => v || null),
-  responsavelInstituicaoId: z.string().uuid().optional().nullable(),
+  responsavelInstituicaoId: z.string().guid().optional().nullable(),
   prazo: z.string().regex(DATA, 'Prazo inválido (AAAA-MM-DD).').optional().nullable(),
   status: z.enum(['pendente', 'em_andamento', 'concluido', 'cancelado']).optional(),
   concluidoEm: z.string().regex(DATA).optional().nullable(),

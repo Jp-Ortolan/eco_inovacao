@@ -12,14 +12,15 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { token: string } }} contexto
+ * @param {{ params: Promise<{ token: string }> }} contexto
  */
 export async function GET(req, { params }) {
+  const { token } = await params;
   try {
-    await exigirDentroDoLimite('buscar', ipDaRequisicao(req), params.token);
+    await exigirDentroDoLimite('buscar', ipDaRequisicao(req), token);
 
     const termo = req.nextUrl.searchParams.get('nome') ?? '';
-    return ok(await buscarParticipante(params.token, termo));
+    return ok(await buscarParticipante(token, termo));
   } catch (e) {
     return falha(e);
   }

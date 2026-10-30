@@ -211,10 +211,10 @@ export async function encerrarCredenciamento(usuario, id, natureza) {
 // --------------------------------------------------------- presença manual
 
 const esquemaManual = z.object({
-  pessoaId: z.string().uuid('Selecione o participante.'),
-  instituicaoId: z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform((v) => v || null),
-  tipo: z.enum(['representante', 'convidado', 'equipe'], { errorMap: () => ({ message: 'Tipo inválido.' }) }),
-  statusPresenca: z.enum(['presente', 'ausente', 'justificada'], { errorMap: () => ({ message: 'Situação inválida.' }) }),
+  pessoaId: z.string().guid('Selecione o participante.'),
+  instituicaoId: z.union([z.string().guid(), z.literal(''), z.null()]).optional().transform((v) => v || null),
+  tipo: z.enum(['representante', 'convidado', 'equipe'], { message: 'Tipo inválido.' }),
+  statusPresenca: z.enum(['presente', 'ausente', 'justificada'], { message: 'Situação inválida.' }),
   modalidade: z.enum(['presencial', 'online']).optional().nullable(),
   justificativa: z.string().trim().min(3, 'Informe a justificativa da inclusão ou correção.').max(500),
   chaveOperacao: z.string().optional().nullable(),

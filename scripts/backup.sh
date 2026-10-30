@@ -24,6 +24,8 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DESTINO="${DESTINO:-$RAIZ/backups}"
 RETENCAO_DIAS="${RETENCAO_DIAS:-14}"
 
+# O dump tem hashes de senha e documentos: só o dono do arquivo lê.
+umask 077
 mkdir -p "$DESTINO"
 ARQUIVO="$DESTINO/ecossistema-$(date +%Y%m%d-%H%M%S).dump"
 
@@ -45,8 +47,17 @@ if [ "$TABELAS" -lt 5 ]; then
 fi
 echo "    $TABELAS tabelas com dados"
 
+# Com BACKUP_AGE_RECIPIENT (chave pública age), o arquivo é criptografado e o
+# dump em claro é apagado.
+if [ -n "${BACKUP_AGE_RECIPIENT:-}" ]; then
+  echo "==> criptografando com age"
+  age -r "$BACKUP_AGE_RECIPIENT" -o "$ARQUIVO.age" "$ARQUIVO"
+  rm -f "$ARQUIVO"
+  ARQUIVO="$ARQUIVO.age"
+fi
+
 echo "==> apagando backups com mais de $RETENCAO_DIAS dias"
-find "$DESTINO" -name 'ecossistema-*.dump' -mtime +"$RETENCAO_DIAS" -print -delete
+find "$DESTINO" \( -name 'ecossistema-*.dump' -o -name 'ecossistema-*.dump.age' \) -mtime +"$RETENCAO_DIAS" -print -delete
 
 echo ""
 echo "==> backup concluído"

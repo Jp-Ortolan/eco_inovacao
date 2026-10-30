@@ -12,13 +12,14 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function PATCH(req, { params }) {
+  const { id } = await params;
   try {
     const usuario = await usuarioAtual();
     const corpo = await req.json().catch(() => null);
-    return ok(await editarEncaminhamento(usuario, params.id, corpo));
+    return ok(await editarEncaminhamento(usuario, id, corpo));
   } catch (e) {
     return falha(e);
   }
@@ -26,11 +27,12 @@ export async function PATCH(req, { params }) {
 
 /**
  * @param {import('next/server').NextRequest} _req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function DELETE(_req, { params }) {
+  const { id } = await params;
   try {
-    return ok(await excluirEncaminhamento(await usuarioAtual(), params.id));
+    return ok(await excluirEncaminhamento(await usuarioAtual(), id));
   } catch (e) {
     return falha(e);
   }

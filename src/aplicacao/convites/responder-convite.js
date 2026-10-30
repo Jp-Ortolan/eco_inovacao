@@ -13,7 +13,7 @@ import { exigir, validar } from '@/aplicacao/guarda.js';
 
 export const esquemaResposta = z.object({
   status: z.enum(['pendente', 'confirmado', 'recusado'], {
-    errorMap: () => ({ message: 'Resposta inválida.' }),
+    message: 'Resposta inválida.',
   }),
   observacoes: z.string().trim().max(500).optional().transform((v) => (v || null)),
 });
@@ -44,8 +44,8 @@ export async function responderConvite(usuario, conviteId, entrada) {
         + 'o que vale agora é a presença registrada.');
     }
 
-// A constraint convite_respondido_tem_data exige data fora de 'pendente'.
-// Fazer aqui deixa a regra visível; o banco continua conferindo.
+    // A constraint convite_respondido_tem_data exige data fora de 'pendente'.
+    // Fazer aqui deixa a regra visível; o banco continua conferindo.
     const respondidoEm = status === 'pendente' ? null : new Date().toISOString();
 
     let linha;

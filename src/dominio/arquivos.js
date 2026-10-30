@@ -90,7 +90,7 @@ export function extensaoDe(nome) {
  */
 export function sanitizarNome(nome) {
   const so = String(nome ?? '')
-// Barra vira sublinhado: impede nome do tipo ../../etc/senha.
+    // Barra vira sublinhado: impede nome do tipo ../../etc/senha.
     .replace(/[\\/]/g, '_')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, '-')
@@ -122,8 +122,8 @@ export function conteudoBateComTipo(conteudo, mime) {
     return !bytes.subarray(0, 8192).includes(0);
   }
 
-// Assinaturas todas na posição 0 são alternativas: basta uma bater.
-// WebP tem duas em posições diferentes, então precisa das duas.
+  // Assinaturas todas na posição 0 são alternativas: basta uma bater.
+  // WebP tem duas em posições diferentes, então precisa das duas.
   const todasNaPosicaoZero = tipo.assinaturas.every(([pos]) => pos === 0);
 
   const confere = ([pos, hex]) => {

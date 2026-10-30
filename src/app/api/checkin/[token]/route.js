@@ -17,14 +17,15 @@ export const dynamic = 'force-dynamic';
  * GET — dados públicos da reunião, para montar a tela (RF27).
  *
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { token: string } }} contexto
+ * @param {{ params: Promise<{ token: string }> }} contexto
  */
 export async function GET(req, { params }) {
+  const { token } = await params;
   try {
-    await exigirDentroDoLimite('consultar', ipDaRequisicao(req), params.token);
+    await exigirDentroDoLimite('consultar', ipDaRequisicao(req), token);
     // Rota pública, mas quem já está logado recebe os próprios dados.
     const usuario = await usuarioAtual().catch(() => null);
-    return ok(await consultarReuniao(params.token, usuario));
+    return ok(await consultarReuniao(token, usuario));
   } catch (e) {
     return falha(e);
   }
@@ -34,18 +35,19 @@ export async function GET(req, { params }) {
  * POST — registra a presença (RF29 a RF34).
  *
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { token: string } }} contexto
+ * @param {{ params: Promise<{ token: string }> }} contexto
  */
 export async function POST(req, { params }) {
+  const { token } = await params;
   try {
-// Antes de ler o corpo: uma enxurrada não deve nem consumir o corpo, e a
-// tentativa recusada também precisa contar.
-    await exigirDentroDoLimite('registrar', ipDaRequisicao(req), params.token);
+    // Antes de ler o corpo: uma enxurrada não deve nem consumir o corpo, e a
+    // tentativa recusada também precisa contar.
+    await exigirDentroDoLimite('registrar', ipDaRequisicao(req), token);
 
     const ip = ipDaRequisicao(req);
     const corpo = await req.json().catch(() => null);
     const usuario = await usuarioAtual().catch(() => null);
-    return ok(await registrarPresenca(params.token, corpo, { usuario, ip }), 201);
+    return ok(await registrarPresenca(token, corpo, { usuario, ip }), 201);
   } catch (e) {
     return falha(e);
   }

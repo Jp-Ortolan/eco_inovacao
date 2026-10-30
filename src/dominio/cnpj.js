@@ -23,7 +23,7 @@ export function cnpjValido(valor) {
   const cnpj = apenasDigitos(valor);
   if (cnpj.length !== 14) return false;
 
-// Dígitos todos iguais passam na conta por coincidência: recusa na mão.
+  // Dígitos todos iguais passam na conta por coincidência: recusa na mão.
   if (/^(\d)\1{13}$/.test(cnpj)) return false;
 
   /**

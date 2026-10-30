@@ -1,5 +1,5 @@
 /**
- * Esquemas das solicitações de alteração (revisão de outubro).
+ * Esquemas das solicitações de alteração.
  *
  * Cada tipo tem o seu formato de `dados`. Validar na ENTRADA, e não só na
  * aprovação, é o que impede a Diretoria de abrir um pedido e descobrir na hora
@@ -63,7 +63,7 @@ const pessoaNova = z.object({
 });
 
 const representacao = z.object({
-  pessoaId: z.string().uuid().optional(),
+  pessoaId: z.string().guid().optional(),
   pessoa: pessoaNova.optional(),
   cargo: z.string().trim().max(120).optional().transform((v) => v || null),
   dataInicio: z.string().regex(DATA, 'Data de início inválida (AAAA-MM-DD).').optional(),
@@ -85,7 +85,7 @@ export const ESQUEMA_DADOS = {
     tipoRepresentacao: z.enum(['integrante', 'convidado']).optional().default('integrante'),
   })),
   remover_representante: z.object({
-    vinculoId: z.string().uuid('Indique o vínculo a encerrar.'),
+    vinculoId: z.string().guid('Indique o vínculo a encerrar.'),
     dataFim: z.string().regex(DATA).optional(),
     motivo: z.string().trim().min(3, 'Informe o motivo.').max(500),
   }),
@@ -97,8 +97,8 @@ export const ESQUEMA_DADOS = {
     motivo: z.string().trim().min(3, 'Informe o motivo da saída.').max(500),
   }),
   correcao_presenca: z.object({
-    reuniaoId: z.string().uuid('Indique a reunião.'),
-    pessoaId: z.string().uuid('Indique o participante.'),
+    reuniaoId: z.string().guid('Indique a reunião.'),
+    pessoaId: z.string().guid('Indique o participante.'),
     status: z.enum(['presente', 'ausente', 'justificado']),
     observacoes: z.string().trim().max(500).optional().transform((v) => v || null),
   }),
@@ -106,19 +106,19 @@ export const ESQUEMA_DADOS = {
 
 export const esquemaCriarSolicitacao = z.object({
   tipo: z.enum(TIPOS_SOLICITACAO, {
-    errorMap: () => ({ message: 'Tipo de solicitação inválido.' }),
+    message: 'Tipo de solicitação inválido.',
   }),
   // A gestão pode abrir em nome de uma instituição; o representante, só da dele
   // (e, se não informar, vale a dele).
-  instituicaoId: z.string().uuid().optional(),
-  dados: z.record(z.unknown()).optional().default({}),
+  instituicaoId: z.string().guid().optional(),
+  dados: z.record(z.string(), z.unknown()).optional().default({}),
   justificativa: z.string().trim().max(2000).optional().transform((v) => v || null),
-  documentoId: z.string().uuid().optional(),
+  documentoId: z.string().guid().optional(),
 });
 
 export const esquemaDecisao = z.object({
   decisao: z.enum(['aprovar', 'recusar'], {
-    errorMap: () => ({ message: 'Decida "aprovar" ou "recusar".' }),
+    message: 'Decida "aprovar" ou "recusar".',
   }),
   resposta: z.string().trim().max(2000).optional().transform((v) => v || null),
   // Controle de concorrência: a versão da solicitação que a pessoa leu.
@@ -128,7 +128,7 @@ export const esquemaDecisao = z.object({
 export const esquemaFiltroSolicitacao = z.object({
   status: z.enum(['pendente', 'aprovada', 'recusada', 'cancelada']).optional(),
   tipo: z.enum(TIPOS_SOLICITACAO).optional(),
-  instituicaoId: z.string().uuid().optional(),
+  instituicaoId: z.string().guid().optional(),
   pagina: z.coerce.number().int().min(1).default(1),
   porPagina: z.coerce.number().int().min(1).max(100).default(20),
 });

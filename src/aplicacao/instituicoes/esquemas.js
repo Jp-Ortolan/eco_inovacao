@@ -103,7 +103,7 @@ const objetoInstituicao = z.object({
   dataFundacao: z.string().regex(DATA, 'Informe a data de fundação (AAAA-MM-DD).'),
 
   status: z.enum(STATUS_INSTITUICAO, {
-    errorMap: () => ({ message: 'Selecione uma situação válida.' }),
+    message: 'Selecione uma situação válida.',
   }),
 
   // A tela não marca o e-mail como obrigatório, então aqui também não é.
@@ -150,7 +150,7 @@ const objetoInstituicao = z.object({
   observacoes: opcional(2000),
   responsavel: opcional(200),
   motivoSaida: opcional(500),
-  substituidaPorId: z.string().uuid().optional().nullable(),
+  substituidaPorId: z.string().guid().optional().nullable(),
 });
 
 // Barrar aqui aponta o campo que falta, em vez de devolver o erro genérico da
@@ -181,12 +181,12 @@ export const esquemaEditar = objetoInstituicao.partial();
 
 export const esquemaStatus = z.object({
   status: z.enum(STATUS_INSTITUICAO, {
-    errorMap: () => ({ message: 'Situação inválida.' }),
+    message: 'Situação inválida.',
   }),
   dataSaida: z.string().regex(DATA).optional().nullable(),
   dataEntrada: z.string().regex(DATA).optional().nullable(),
   motivo: z.string().trim().max(500).optional().nullable(),
-  substituidaPorId: z.string().uuid().optional().nullable(),
+  substituidaPorId: z.string().guid().optional().nullable(),
 });
 
 export const esquemaFiltro = z.object({

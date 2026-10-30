@@ -18,15 +18,16 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function GET(req, { params }) {
+  const { id } = await params;
   try {
     const { formato, ...filtros } = Object.fromEntries(req.nextUrl.searchParams);
     if (formato === 'csv') {
-      return respostaDeArquivo(await exportarParticipantes(await usuarioAtual(), params.id, filtros));
+      return respostaDeArquivo(await exportarParticipantes(await usuarioAtual(), id, filtros));
     }
-    return ok(await listarParticipantes(await usuarioAtual(), params.id, filtros));
+    return ok(await listarParticipantes(await usuarioAtual(), id, filtros));
   } catch (e) {
     return falha(e);
   }

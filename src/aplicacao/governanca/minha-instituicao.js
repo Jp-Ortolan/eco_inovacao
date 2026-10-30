@@ -128,27 +128,27 @@ const texto = (max) => z.string().trim().max(max);
 
 const esquemaBase = z.object({
   tipo: z.enum(['alteracao_cadastral', 'correcao_presenca', 'substituicao_representante',
-    'encerramento_representante'], { errorMap: () => ({ message: 'Tipo de solicitação inválido.' }) }),
+    'encerramento_representante'], { message: 'Tipo de solicitação inválido.' }),
   justificativa: texto(2000).optional().nullable().transform((v) => v || null),
 }).passthrough();
 
 const esquemaCadastral = z.object({
-  alteracoes: z.record(z.unknown(), { invalid_type_error: 'Informe as alterações.' }),
+  alteracoes: z.record(z.string(), z.unknown(), { message: 'Informe as alterações.' }),
 });
 
 const esquemaCorrecao = z.object({
   presencaId: z.string().trim().min(1, 'Indique a presença.'),
   alteracoes: z.object({
     statusPresenca: z.enum(['presente', 'ausente', 'justificada'], {
-      errorMap: () => ({ message: 'Situação inválida: presente, ausente ou justificada.' }),
+      message: 'Situação inválida: presente, ausente ou justificada.',
     }),
     modalidade: z.enum(['presencial', 'online']).optional().nullable().or(z.literal('')),
   }),
 });
 
 const esquemaRepresentacao = z.object({
-  representanteAnteriorId: z.string().uuid('Indique o vínculo do representante.'),
-  oficioId: z.string().uuid('Anexe o ofício e selecione-o.'),
+  representanteAnteriorId: z.string().guid('Indique o vínculo do representante.'),
+  oficioId: z.string().guid('Anexe o ofício e selecione-o.'),
   novoRepresentante: z.object({
     nome: texto(200).min(3, 'Informe o nome completo.'),
     email: z.string().trim().email('E-mail inválido.').optional().nullable().or(z.literal(''))
@@ -156,7 +156,7 @@ const esquemaRepresentacao = z.object({
     telefone: texto(20).optional().nullable().transform((v) => v || null),
     cargo: texto(120).optional().nullable().transform((v) => v || null),
     tipo: z.enum(['titular', 'suplente', 'adicional', 'convidado'], {
-      errorMap: () => ({ message: 'Tipo inválido: titular, suplente, adicional ou convidado.' }),
+      message: 'Tipo inválido: titular, suplente, adicional ou convidado.',
     }),
   }).optional(),
 });

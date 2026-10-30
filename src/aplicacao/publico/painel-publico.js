@@ -1,5 +1,5 @@
 /**
- * CASOS DE USO — Painel público, sem login (revisão de outubro).
+ * CASOS DE USO — Painel público, sem login.
  *
  * Tudo aqui passa pelas funções publico_* do banco (migration 011), que
  * devolvem só o que pode ser público: números agregados, instituições que
@@ -94,7 +94,7 @@ export async function instituicoesPublicas(filtros) {
 
 /** @param {string} instituicaoId */
 export async function logoPublica(instituicaoId) {
-  if (!z.string().uuid().safeParse(instituicaoId).success) {
+  if (!z.string().guid().safeParse(instituicaoId).success) {
     throw new ErroDeNegocio('NAO_ENCONTRADO', 'Logo não encontrada.');
   }
   const l = await consultaUm('select * from publico_logo($1)', [instituicaoId]);
@@ -135,7 +135,7 @@ export async function documentosPublicos() {
 
 /** @param {string} id */
 export async function documentoPublico(id) {
-  if (!z.string().uuid().safeParse(id).success) {
+  if (!z.string().guid().safeParse(id).success) {
     throw new ErroDeNegocio('NAO_ENCONTRADO', 'Documento não encontrado.');
   }
   const d = await consultaUm('select * from publico_documento_conteudo($1)', [id]);

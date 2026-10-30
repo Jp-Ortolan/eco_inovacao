@@ -15,13 +15,14 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function POST(req, { params }) {
+  const { id } = await params;
   try {
     const usuario = await usuarioAtual();
     const corpo = await req.json().catch(() => null);
-    return ok(await alterarStatusInstituicao(usuario, params.id, corpo));
+    return ok(await alterarStatusInstituicao(usuario, id, corpo));
   } catch (e) {
     return falha(e);
   }

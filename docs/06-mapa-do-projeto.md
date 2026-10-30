@@ -88,7 +88,7 @@ ecossistema-inovacao/
 │   ├── aplicacao/              ② CASOS DE USO
 │   ├── dominio/                ③ REGRAS DE NEGÓCIO
 │   ├── infraestrutura/         ④ FERRAMENTAS
-│   └── middleware.js
+│   └── proxy.js
 │
 ├── testes/
 │   ├── banco/                  36 testes em SQL
@@ -166,14 +166,16 @@ Não importa nada. É o coração do sistema.
 | `seguranca/senha.js` | Hash e conferência com Argon2id |
 | `seguranca/tokens.js` | Sorteio e hash de tokens de sessão e de recuperação |
 | `seguranca/sessao.js` | Abrir, ler e encerrar sessão; `exigirUsuario()` e `exigirPermissao()` |
-| `email/enviar.js` | Adaptador de e-mail: sem provedor configurado, imprime no terminal |
+| `email/enviar.js` | Adaptador de e-mail: sem provedor, imprime no terminal (em produção, só um aviso sem o conteúdo) |
+| `seguranca/tentativas.js` | Limite de tentativas de login e de recuperação de senha, por IP e por conta |
+| `banco/ssl.js` | TLS da conexão com o PostgreSQL (verificação do certificado) |
 | `http/resposta.js` | Formata sucesso e erro no formato do contrato de API |
 
-### src/middleware.js
+### src/proxy.js
 
-Barreira rápida: quem não tem cookie de sessão não carrega o painel. Roda no
-Edge, onde não há banco — então confere só a **presença** do cookie. A
-validação de verdade acontece em `exigirUsuario()`, no servidor.
+Barreira antes das rotas: CORS, conferência de origem nos métodos que mudam
+estado (CSRF), tamanho máximo do corpo e **presença** do cookie de sessão. A
+validade da sessão é conferida em `usuarioAtual()`, no servidor.
 
 ### scripts/
 
@@ -181,7 +183,7 @@ validação de verdade acontece em `exigirUsuario()`, no servidor.
 |---|---|
 | `migrar.sh` | Aplica as migrations que ainda não rodaram. Guarda numa tabela o que já aplicou |
 | `resetar.sh` | Apaga e recria o banco com seed. **Recusa rodar fora de localhost** |
-| `testar-banco.sh` | Cria um banco descartável, aplica tudo e roda os 36 testes SQL |
+| `testar-banco.sh` | Cria um banco descartável, aplica tudo e roda os testes SQL |
 | `criar-usuario.mjs` | Cria o primeiro administrador. Pede a senha sem mostrar na tela |
 
 ### testes/
@@ -203,7 +205,7 @@ Exemplo — o participante lê o QR Code e confirma presença:
 
 ```
 1. Celular          POST /api/checkin/abc123
-2. middleware.js    rota pública → deixa passar
+2. proxy.js         origem liberada, rota pública → deixa passar
 3. route.js         lê o token da URL e o corpo → chama o caso de uso
 4. registrar-presenca.js
                     valida o formato (Zod) → chama a função do banco

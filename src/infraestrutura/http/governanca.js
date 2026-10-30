@@ -31,7 +31,8 @@ export function confirmadoV1(dados = {}, status = 200) {
 
 /**
  * Endereço público desta API, para montar link absoluto.
- * URL_API manda; sem ela, o que o proxy do Railway informou na requisição.
+ * URL_API manda. Sem ela, vale o host da requisição — que o cliente pode
+ * mandar como quiser; por isso URL_API é obrigatória em produção.
  *
  * @param {Request} req
  * @returns {string} sem barra no fim

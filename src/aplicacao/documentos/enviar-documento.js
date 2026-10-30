@@ -34,8 +34,8 @@ export const TIPOS_DOCUMENTO = [
 ];
 
 const esquemaBase = z.object({
-  instituicaoId: z.string().uuid().optional(),
-  reuniaoId: z.string().uuid().optional(),
+  instituicaoId: z.string().guid().optional(),
+  reuniaoId: z.string().guid().optional(),
   nome: z.string().trim().max(200).optional(),
   descricao: z.string().trim().max(500).optional().transform((v) => (v || null)),
   tipo: z.string().trim().max(60).optional().transform((v) => (v || null)),
@@ -43,7 +43,7 @@ const esquemaBase = z.object({
   // interno: gestão + a instituição; membros: todo logado; publico: painel.
   visibilidade: z.enum(['interno', 'membros', 'publico']).optional(),
   // Nova versão de um documento já enviado (ofício substituído, ata revisada).
-  substituiId: z.string().uuid().optional(),
+  substituiId: z.string().guid().optional(),
 })
   .refine((d) => !(d.instituicaoId && d.reuniaoId), {
     message: 'O documento pertence a uma instituição OU a uma reunião, não às duas.',
@@ -186,8 +186,8 @@ export async function enviarDocumento(usuario, { campos, arquivo = null }) {
     // ---------------------------------------------------------- com arquivo
     const checksum = createHash('sha256').update(arquivo.conteudo).digest('hex');
 
-// Mesmo arquivo e mesmo dono: devolve o que existe em vez de criar uma segunda
-// cópia. Clicar duas vezes em enviar é a causa mais comum.
+    // Mesmo arquivo e mesmo dono: devolve o que existe em vez de criar uma segunda
+    // cópia. Clicar duas vezes em enviar é a causa mais comum.
     const repetido = await tx.consultaUm(
       `select id, nome, created_at from documento
         where checksum_sha256 = $1

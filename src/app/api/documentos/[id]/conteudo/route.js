@@ -20,12 +20,13 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} _req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function GET(_req, { params }) {
+  const { id } = await params;
   try {
     const { nome, mimeType, conteudo } = await baixarDocumento(
-      await usuarioAtual(), params.id,
+      await usuarioAtual(), id,
     );
 
     return new Response(conteudo, {

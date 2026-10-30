@@ -65,7 +65,7 @@ src/
   dominio/                ③ regras — permissoes.js, erros.js, tipos.js
   infraestrutura/         ④ ferramentas
     banco/  seguranca/  email/  http/
-  middleware.js           CORS + barreira de cookie antes das rotas privadas
+  proxy.js                CORS, origem (CSRF), tamanho do corpo, cookie de sessão
 testes/
   banco/  dominio/  integracao/
 scripts/                  migrar, resetar, testar, criar usuário

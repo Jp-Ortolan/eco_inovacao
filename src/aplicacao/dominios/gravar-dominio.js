@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Manter as listas do Fórum (revisão de outubro).
+ * CASO DE USO — Manter as listas do Fórum.
  *
  * Vertentes e GTs nascem vazios (migration 009): os nomes são decisão do
  * Fórum. A gestão cadastra, renomeia e desativa por aqui. Desativar tira do
@@ -22,7 +22,7 @@ const LISTAS = {
 
 export const esquemaDominio = z.object({
   lista: z.enum(/** @type {[string, ...string[]]} */ (Object.keys(LISTAS)), {
-    errorMap: () => ({ message: `Lista inválida: ${Object.keys(LISTAS).join(', ')}.` }),
+    message: `Lista inválida: ${Object.keys(LISTAS).join(', ')}.`,
   }),
   id: z.coerce.number().int().positive().optional(),
   nome: z.string().trim().min(2, 'Informe o nome.').max(120).optional(),

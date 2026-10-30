@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Credenciamento: abrir, fechar e gerar QR novo (revisão de outubro).
+ * CASO DE USO — Credenciamento: abrir, fechar e gerar QR novo.
  *
  * A janela do check-in já existia (checkin_abre_em / checkin_fecha_em), mas
  * só se definia no cadastro. Na prática a Diretoria quer apertar um botão
@@ -20,7 +20,7 @@ import { urlDoFront } from '@/infraestrutura/http/front.js';
 
 export const esquemaCredenciamento = z.object({
   acao: z.enum(['abrir', 'fechar', 'novo_qr'], {
-    errorMap: () => ({ message: 'Ação inválida: abrir, fechar ou novo_qr.' }),
+    message: 'Ação inválida: abrir, fechar ou novo_qr.',
   }),
   // Aproveita o mesmo botão para decidir se convidado avulso pode entrar.
   permiteConvidado: z.boolean().optional(),

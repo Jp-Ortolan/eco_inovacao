@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Abrir uma solicitação de alteração (revisão de outubro).
+ * CASO DE USO — Abrir uma solicitação de alteração.
  *
  * "Alterações mais sensíveis não devem substituir o dado imediatamente. Devem
  * gerar uma solicitação para aprovação da Diretoria ou do administrador."

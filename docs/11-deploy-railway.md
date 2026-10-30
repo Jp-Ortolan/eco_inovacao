@@ -71,6 +71,11 @@ cada deploy, start, e verificação de saúde em `/api/saude`.
 | `ARMAZENAMENTO` | `postgres` |
 | `UPLOAD_LIMITE_BYTES` | `20971520` |
 
+Use as URLs **internas** (`postgres.railway.internal`) nas duas variáveis: na
+rede privada a conexão usa TLS sem verificar o certificado autoassinado do
+Railway. Pela URL pública (`*.proxy.rlwy.net`) o certificado é verificado, e
+aí é preciso `DATABASE_SSL_CA` (ver [implantação](14-implantacao.md)).
+
 Sobre a `DATABASE_URL`: pegue a interna (`postgres.railway.internal`) e troque o
 começo. De `postgresql://postgres:SENHA@postgres.railway.internal:5432/railway`
 para `postgresql://app_web:SUA_SENHA@postgres.railway.internal:5432/railway`.

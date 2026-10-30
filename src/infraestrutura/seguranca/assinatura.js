@@ -10,11 +10,16 @@
  *
  * SEGREDO_LINKS precisa ser o mesmo em todas as réplicas. Sem ele, cada
  * processo sorteia o seu (funciona com uma instância só; links emitidos antes
- * de um reinício deixam de valer).
+ * de um reinício deixam de valer) — em produção isso é avisado no log.
  */
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
-const SEGREDO = process.env.SEGREDO_LINKS || randomBytes(32).toString('hex');
+const CONFIGURADO = process.env.SEGREDO_LINKS ?? '';
+if (process.env.NODE_ENV === 'production' && CONFIGURADO.length < 32) {
+  console.warn('[links] SEGREDO_LINKS ausente ou com menos de 32 caracteres; '
+    + (CONFIGURADO ? 'use um segredo maior (openssl rand -hex 32).' : 'usando um segredo temporário deste processo.'));
+}
+const SEGREDO = CONFIGURADO || randomBytes(32).toString('hex');
 export const VALIDADE_LINK_MINUTOS = 15;
 
 const b64 = (s) => Buffer.from(s).toString('base64url');

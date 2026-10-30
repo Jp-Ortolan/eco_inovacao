@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Percentual de participação por instituição (revisão de outubro).
+ * CASO DE USO — Percentual de participação por instituição.
  *
  * A regra de cálculo é UMA só, a mesma dos indicadores ("padronização das
  * regras de cálculo"):

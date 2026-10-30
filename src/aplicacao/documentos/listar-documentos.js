@@ -9,8 +9,8 @@ import { comUsuario } from '@/infraestrutura/banco/consulta.js';
 import { exigir, validar } from '@/aplicacao/guarda.js';
 
 const esquema = z.object({
-  instituicaoId: z.string().uuid().optional(),
-  reuniaoId: z.string().uuid().optional(),
+  instituicaoId: z.string().guid().optional(),
+  reuniaoId: z.string().guid().optional(),
   tipo: z.string().trim().max(60).optional(),
 })
   .refine((d) => !(d.instituicaoId && d.reuniaoId), {

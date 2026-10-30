@@ -19,6 +19,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { prepararConexao } from '../src/infraestrutura/banco/ssl.js';
 import { executarArquivo } from './lib/sql.mjs';
 
 const { Client } = pg;
@@ -30,15 +31,13 @@ if (!URL_ADMIN) {
   process.exit(1);
 }
 
-const ssl = /localhost|127\.0\.0\.1|host=\/|sslmode=disable/.test(URL_ADMIN)
-  ? undefined : { rejectUnauthorized: false };
 
 const verde = (t) => `\x1b[32m${t}\x1b[0m`;
 const cinza = (t) => `\x1b[90m${t}\x1b[0m`;
 const vermelho = (t) => `\x1b[31m${t}\x1b[0m`;
 
 async function principal() {
-  const c = new Client({ connectionString: URL_ADMIN, ssl });
+  const c = new Client(prepararConexao(URL_ADMIN));
   await c.connect();
 
   try {

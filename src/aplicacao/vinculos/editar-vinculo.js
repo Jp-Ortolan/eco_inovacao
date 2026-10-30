@@ -1,5 +1,5 @@
 /**
- * CASO DE USO — Ajustar a representação (revisão de outubro).
+ * CASO DE USO — Ajustar a representação.
  *
  * Tipo (titular, suplente, integrante, convidado), cargo na instituição, cargo
  * no Fórum, GTs e o ofício que formalizou. Instituição, pessoa e datas NÃO
@@ -18,7 +18,7 @@ export const esquemaEditarVinculo = z.object({
   tipoRepresentacao: z.enum(['titular', 'suplente', 'integrante', 'convidado']),
   cargo: z.string().trim().max(120).transform((v) => v || null),
   cargoForum: z.string().trim().max(120).nullable().transform((v) => v || null),
-  oficioDocumentoId: z.string().uuid().nullable(),
+  oficioDocumentoId: z.string().guid().nullable(),
   observacoes: z.string().trim().max(2000).transform((v) => v || null),
   grupoTrabalhoIds: z.array(z.coerce.number().int().positive()).max(30),
 }).partial();

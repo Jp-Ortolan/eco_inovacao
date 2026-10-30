@@ -11,6 +11,7 @@
  */
 import { createInterface } from 'node:readline';
 import pg from 'pg';
+import { prepararConexao } from '../src/infraestrutura/banco/ssl.js';
 
 const url = (process.env.DATABASE_URL_ADMIN ?? '').trim();
 if (!url) {
@@ -37,8 +38,7 @@ function perguntar(pergunta) {
 
 // Conectar ANTES de perguntar: senão uma URL errada faz a pessoa digitar a
 // senha à toa, e três vezes seguidas.
-const ssl = /localhost|127\.0\.0\.1|host=\//.test(url) ? undefined : { rejectUnauthorized: false };
-const c = new pg.Client({ connectionString: url, ssl, connectionTimeoutMillis: 15000 });
+const c = new pg.Client({ ...prepararConexao(url), connectionTimeoutMillis: 15000 });
 
 try {
   await c.connect();

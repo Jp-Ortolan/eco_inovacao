@@ -9,6 +9,7 @@ import {
 } from '@/infraestrutura/seguranca/tokens.js';
 import { enviar } from '@/infraestrutura/email/enviar.js';
 import { urlDoFront } from '@/infraestrutura/http/front.js';
+import { exigirTentativaPermitida, registrarTentativa } from '@/infraestrutura/seguranca/tentativas.js';
 
 export const esquemaPedido = z.object({
   email: z.string().trim().email('Informe um e-mail válido.'),
@@ -27,14 +28,21 @@ export const esquemaNovaSenha = z.object({
  * Responde sempre igual, exista ou não a conta, senão o formulário viraria um
  * verificador de cadastro. Quem decide é a função do banco.
  *
- * @param {{ email: string }} entrada
+ * Limitado por IP e por e-mail: sem isso, a rota vira um disparador de
+ * e-mails contra a caixa de qualquer pessoa.
+ *
+ * @param {{ email: string, ip?: string|null }} entrada
  * @returns {Promise<{ ok: true, mensagem: string } | { ok: false, erro: string }>}
  */
-export async function pedirRecuperacao({ email }) {
+export async function pedirRecuperacao({ email, ip = null }) {
   const analise = esquemaPedido.safeParse({ email });
   if (!analise.success) {
     return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' };
   }
+
+  const quem = { ip, email: analise.data.email };
+  await exigirTentativaPermitida('recuperacao', quem);
+  await registrarTentativa('recuperacao', quem);
 
   const token = gerarToken();
   const expira = new Date(Date.now() + DURACAO_RECUPERACAO_MINUTOS * 60_000);
@@ -103,14 +111,16 @@ export async function enviarConvite({ email, nome, perfil, instituicao = null })
 /**
  * Grava a nova senha. O token só vale uma vez — quem gasta é a função do banco.
  *
- * @param {{ token: string, senha: string, confirmacao: string }} entrada
+ * @param {{ token: string, senha: string, confirmacao: string, ip?: string|null }} entrada
  * @returns {Promise<{ ok: true, mensagem: string } | { ok: false, erro: string }>}
  */
-export async function redefinirSenha({ token, senha, confirmacao }) {
+export async function redefinirSenha({ token, senha, confirmacao, ip = null }) {
   const analise = esquemaNovaSenha.safeParse({ token, senha, confirmacao });
   if (!analise.success) {
     return { ok: false, erro: analise.error.issues[0]?.message ?? 'Dados inválidos.' };
   }
+
+  await exigirTentativaPermitida('redefinicao', { ip });
 
   const linha = await consultaUm(
     'select auth_usar_token_recuperacao($1)', [hashToken(analise.data.token)],
@@ -118,6 +128,7 @@ export async function redefinirSenha({ token, senha, confirmacao }) {
   const usuarioId = linha?.auth_usar_token_recuperacao ?? null;
 
   if (!usuarioId) {
+    await registrarTentativa('redefinicao', { ip });
     return { ok: false, erro: 'Este link expirou ou já foi usado. Peça a recuperação de senha novamente.' };
   }
 

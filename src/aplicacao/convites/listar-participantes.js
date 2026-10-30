@@ -12,7 +12,7 @@ import { exigir, validar } from '@/aplicacao/guarda.js';
 
 export const esquemaFiltroParticipante = z.object({
   busca: z.string().trim().max(120).optional(),
-  instituicaoId: z.string().uuid().optional(),
+  instituicaoId: z.string().guid().optional(),
   situacao: z.enum([
     'todos',
     'presentes',

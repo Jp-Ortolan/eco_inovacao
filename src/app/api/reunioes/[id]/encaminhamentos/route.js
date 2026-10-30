@@ -12,11 +12,12 @@ export const dynamic = 'force-dynamic';
 
 /**
  * @param {import('next/server').NextRequest} _req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function GET(_req, { params }) {
+  const { id } = await params;
   try {
-    return ok(await listarEncaminhamentos(await usuarioAtual(), params.id));
+    return ok(await listarEncaminhamentos(await usuarioAtual(), id));
   } catch (e) {
     return falha(e);
   }
@@ -24,13 +25,14 @@ export async function GET(_req, { params }) {
 
 /**
  * @param {import('next/server').NextRequest} req
- * @param {{ params: { id: string } }} contexto
+ * @param {{ params: Promise<{ id: string }> }} contexto
  */
 export async function POST(req, { params }) {
+  const { id } = await params;
   try {
     const usuario = await usuarioAtual();
     const corpo = await req.json().catch(() => null);
-    return ok(await criarEncaminhamento(usuario, params.id, corpo), 201);
+    return ok(await criarEncaminhamento(usuario, id, corpo), 201);
   } catch (e) {
     return falha(e);
   }

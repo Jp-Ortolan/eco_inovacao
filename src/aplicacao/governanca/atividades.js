@@ -140,16 +140,16 @@ const hora = z.union([z.string(), z.null()]).optional()
   .transform((v) => (v === undefined ? undefined : (String(v ?? '').trim() || null)))
   .refine((v) => v === undefined || v === null || HORA.test(v), 'Horário inválido (HH:mm).');
 const situacao = z.enum(['rascunho', 'publicada', 'em_andamento', 'encerrada', 'cancelada'], {
-  errorMap: () => ({ message: 'Situação inválida.' }),
+  message: 'Situação inválida.',
 }).optional();
 const modalidade = z.enum(['presencial', 'online', 'hibrida'], {
-  errorMap: () => ({ message: 'Modalidade: presencial, online ou híbrida.' }),
+  message: 'Modalidade: presencial, online ou híbrida.',
 }).optional();
 
 const esquemaEvento = z.object({
   titulo: texto(200),
   categoria: z.enum(/** @type {[string, ...string[]]} */ (Object.keys(CATEGORIA_EVENTO)), {
-    errorMap: () => ({ message: 'Selecione a categoria.' }),
+    message: 'Selecione a categoria.',
   }).optional(),
   data: z.string().regex(DATA, 'Data inválida.').optional(),
   horaInicio: hora,
@@ -175,7 +175,7 @@ const esquemaEvento = z.object({
 
 const esquemaReuniao = z.object({
   tipo: z.enum(/** @type {[string, ...string[]]} */ (Object.keys(TIPO_REUNIAO)), {
-    errorMap: () => ({ message: 'Tipo: ordinária, extraordinária, diretoria ou GT.' }),
+    message: 'Tipo: ordinária, extraordinária, diretoria ou GT.',
   }).optional(),
   numero: inteiro,
   modalidade,

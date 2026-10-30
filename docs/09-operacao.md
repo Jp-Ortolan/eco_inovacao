@@ -72,15 +72,39 @@ lá pode falhar aqui.
 
 ### Automático
 
-`.github/workflows/backup.yml` roda todo dia às 03:00 de Brasília e guarda o
-dump como artefato do GitHub por 30 dias. Também dá para disparar à mão em
+`.github/workflows/backup.yml` roda todo dia às 03:00 de Brasília (ou à mão em
 Actions → Backup do banco → Run workflow, o que vale fazer **antes de aplicar
-migration em produção**.
+migration em produção**). O dump é conferido com `pg_restore --list`,
+criptografado com [age](https://age-encryption.org) dentro do runner e enviado
+a um bucket privado compatível com S3. Nenhum dump fica como artefato do
+GitHub: artefato é legível por quem lê o repositório.
 
-Precisa do secret `DATABASE_URL_ADMIN_PROD` em
-Settings → Secrets and variables → Actions. Sem ele o workflow encerra sem
-erro e avisa no log — nada de quadro vermelho antes de o Railway existir. Com
-ele, um dump menor que 4 KB derruba o job: backup vazio é pior que nenhum.
+Enquanto faltar qualquer um destes secrets (Settings → Secrets and variables →
+Actions), o job só registra um aviso e **não conecta no banco**:
+
+| Secret | Conteúdo |
+|---|---|
+| `DATABASE_URL_ADMIN_PROD` | URL do dono do banco, de preferência com `sslmode=verify-full` |
+| `BACKUP_AGE_RECIPIENT` | Chave **pública** age (`age1...`) |
+| `BACKUP_S3_BUCKET` | Bucket privado, com versionamento e regra de expiração (ex.: 30 dias) |
+| `BACKUP_S3_ENDPOINT` | Vazio para AWS; R2/B2 usam o endpoint do provedor |
+| `BACKUP_S3_ACCESS_KEY_ID` / `BACKUP_S3_SECRET_ACCESS_KEY` | Credencial com permissão **só de escrita** nesse bucket |
+| `BACKUP_S3_REGION` | Opcional (`auto` no R2) |
+
+Gerar o par de chaves, fora do GitHub, e guardar a privada com quem responde
+pelo sistema (cofre de senhas, não e-mail):
+
+```bash
+age-keygen -o backup-forum.key      # a linha "public key: age1..." vai no secret
+```
+
+Restaurar um backup:
+
+```bash
+aws s3 cp s3://BUCKET/postgres/ecossistema-AAAAMMDD-HHMM.dump.age .
+age -d -i backup-forum.key ecossistema-AAAAMMDD-HHMM.dump.age > restaurar.dump
+./scripts/restaurar.sh restaurar.dump
+```
 
 ### À mão
 

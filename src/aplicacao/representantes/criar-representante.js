@@ -32,14 +32,14 @@ export const esquemaRepresentante = z.object({
   // O vínculo é opcional na API para permitir cadastrar a pessoa antes de saber
   // a instituição, mas a tela deve enviar sempre.
   vinculo: z.object({
-    instituicaoId: z.string().uuid('Selecione a instituição.'),
+    instituicaoId: z.string().guid('Selecione a instituição.'),
     cargo: z.string().trim().max(120).optional().transform((v) => (v || null)),
     dataInicio: z.string().regex(DATA, 'Informe a data de início (AAAA-MM-DD).').optional(),
     tipoRepresentacao: z.enum(['titular', 'suplente', 'integrante', 'convidado'], {
-      errorMap: () => ({ message: 'Tipo inválido: titular, suplente, integrante ou convidado.' }),
+      message: 'Tipo inválido: titular, suplente, integrante ou convidado.',
     }).optional().default('integrante'),
     cargoForum: z.string().trim().max(120).optional().transform((v) => (v || null)),
-    oficioDocumentoId: z.string().uuid().optional(),
+    oficioDocumentoId: z.string().guid().optional(),
     grupoTrabalhoIds: z.array(z.coerce.number().int().positive()).max(30).optional(),
   }).optional(),
 });
@@ -58,8 +58,8 @@ export async function criarRepresentante(usuario, entrada) {
     /** @type {{id: string, nome: string}|null} */
     let pessoa = null;
 
-// Reaproveita a pessoa pelo e-mail. Sem e-mail não dá para afirmar que é a mesma
-// pessoa (dois João Silva), então cria outra e a deduplicação fica manual.
+    // Reaproveita a pessoa pelo e-mail. Sem e-mail não dá para afirmar que é a mesma
+    // pessoa (dois João Silva), então cria outra e a deduplicação fica manual.
     if (dados.email) {
       pessoa = await tx.consultaUm(
         'select id, nome from pessoa where email = $1', [dados.email],

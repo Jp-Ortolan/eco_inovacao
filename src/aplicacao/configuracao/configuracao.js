@@ -1,5 +1,5 @@
 /**
- * CASOS DE USO — Configurações do painel público (revisão de outubro).
+ * CASOS DE USO — Configurações do painel público.
  *
  * Link de manifestação de interesse, Linktree e canais oficiais. Ficam no
  * banco (tabela configuracao) para o admin trocar sem deploy.

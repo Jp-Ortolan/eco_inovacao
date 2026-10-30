@@ -60,9 +60,9 @@ export async function marcarLida(usuario, id) {
 }
 
 const esquemaPreferencias = z.object({
-  emailConvocacoes: z.boolean({ invalid_type_error: 'Use verdadeiro ou falso.' }).optional(),
-  emailSolicitacoes: z.boolean({ invalid_type_error: 'Use verdadeiro ou falso.' }).optional(),
-  emailEncaminhamentos: z.boolean({ invalid_type_error: 'Use verdadeiro ou falso.' }).optional(),
+  emailConvocacoes: z.boolean({ message: 'Use verdadeiro ou falso.' }).optional(),
+  emailSolicitacoes: z.boolean({ message: 'Use verdadeiro ou falso.' }).optional(),
+  emailEncaminhamentos: z.boolean({ message: 'Use verdadeiro ou falso.' }).optional(),
 }).strict('Preferência desconhecida.');
 
 /** @param {Usuario|null} usuario @param {unknown} corpo */

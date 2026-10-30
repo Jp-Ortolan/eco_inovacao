@@ -6,6 +6,7 @@
 import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import pg from 'pg';
+import { prepararConexao } from '@/infraestrutura/banco/ssl.js';
 import { fecharPool } from '@/infraestrutura/banco/pool.js';
 
 import { marcarPresenca } from '@/aplicacao/presencas/marcar-presenca.js';
@@ -50,11 +51,7 @@ function gerarCnpj() {
 
 before(async () => {
   if (!rodar) return;
-  db = new Client({
-    connectionString: URL_ADMIN,
-    ssl: /localhost|127\.0\.0\.1|host=\/|sslmode=disable/.test(URL_ADMIN)
-      ? undefined : { rejectUnauthorized: false },
-  });
+  db = new Client(prepararConexao(URL_ADMIN));
   await db.connect();
 
   /** @param {string} papel */

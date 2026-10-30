@@ -15,38 +15,25 @@ export const COOKIE_SESSAO = 'sessao';
  * @property {string|null} pessoaId       pessoa do cadastro ligada à conta, se houver
  */
 
-// -----------------------------------------------------------------------------
-// CORREÇÃO DA SESSÃO (revisão de outubro)
-//
-// O front publicado (Vercel) e a API (Railway) estão em domínios diferentes.
-// Nesse cenário o navegador só devolve o cookie se ele foi gravado com
-// SameSite=None e Secure. Antes isso dependia de alguém lembrar de configurar
-// COOKIE_CROSS_SITE=1 no Railway; sem a variável, o cookie nascia "lax", o
-// navegador não o mandava de volta, toda chamada respondia 401 e o front
-// voltava para o login logo depois de entrar.
-//
-// Agora a API descobre sozinha: se a requisição veio de uma origem HTTPS com
-// outro nome de host, o cookie sai SameSite=None + Secure + Partitioned
-// (Partitioned é o que o Chrome exige para cookie de terceiro continuar
-// funcionando com o bloqueio de cookies de terceiros). COOKIE_CROSS_SITE=1
-// continua forçando o modo entre domínios.
-//
-// Mesmo assim, o jeito MAIS robusto é não ter domínio diferente: um rewrite no
-// Vercel de /api/* para o Railway deixa o cookie "de primeira parte" — Safari
-// bloqueia cookie de terceiro mesmo com SameSite=None. Ver docs/03-ambientes.md.
-// -----------------------------------------------------------------------------
+// Front e API em domínios diferentes (ex.: Vercel x Railway): o navegador só
+// devolve o cookie se ele for SameSite=None + Secure, e o Chrome ainda exige
+// Partitioned com o bloqueio de cookies de terceiros. A API detecta o caso
+// pela origem HTTPS de outro host; COOKIE_CROSS_SITE=1 força o modo.
+// SameSite=None tira a proteção de CSRF do navegador: quem a repõe é a
+// conferência de origem em src/proxy.js. O arranjo mais robusto continua
+// sendo front e API no mesmo domínio (ver docs/03-ambientes.md).
 
 /**
  * A requisição atual vem de outro site?
  *
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
-function requisicaoEntreDominios() {
+async function requisicaoEntreDominios() {
   if (process.env.COOKIE_CROSS_SITE === '1') return true;
 
   let h;
   try {
-    h = headers();
+    h = await headers();
   } catch {
     return false; // fora de requisição (teste de integração): mesmo site
   }
@@ -76,8 +63,8 @@ function requisicaoEntreDominios() {
  *
  * @param {Date} expira
  */
-function opcoesDoCookie(expira) {
-  const entre = requisicaoEntreDominios();
+async function opcoesDoCookie(expira) {
+  const entre = await requisicaoEntreDominios();
   return {
     httpOnly: true,
     sameSite: /** @type {'none'|'lax'} */ (entre ? 'none' : 'lax'),
@@ -107,7 +94,7 @@ export async function abrirSessao(usuarioId, ip, agente) {
     usuarioId, hashToken(token), expira.toISOString(), ip ?? null, agente ?? null,
   ]);
 
-  cookies().set(COOKIE_SESSAO, token, opcoesDoCookie(expira));
+  (await cookies()).set(COOKIE_SESSAO, token, await opcoesDoCookie(expira));
 }
 
 /**
@@ -118,11 +105,12 @@ export async function abrirSessao(usuarioId, ip, agente) {
  * @returns {Promise<void>}
  */
 export async function encerrarSessao() {
-  const token = cookies().get(COOKIE_SESSAO)?.value;
+  const jar = await cookies();
+  const token = jar.get(COOKIE_SESSAO)?.value;
   if (token) {
     await consulta('select auth_encerrar_sessao($1)', [hashToken(token)]);
   }
-  cookies().set(COOKIE_SESSAO, '', { ...opcoesDoCookie(new Date(0)), maxAge: 0 });
+  jar.set(COOKIE_SESSAO, '', { ...(await opcoesDoCookie(new Date(0))), maxAge: 0 });
 }
 
 /**
@@ -135,7 +123,8 @@ export async function encerrarSessao() {
  * @returns {Promise<UsuarioSessao|null>}
  */
 export async function usuarioAtual() {
-  const token = cookies().get(COOKIE_SESSAO)?.value;
+  const jar = await cookies();
+  const token = jar.get(COOKIE_SESSAO)?.value;
   if (!token) return null;
 
   const hash = hashToken(token);
@@ -151,7 +140,7 @@ export async function usuarioAtual() {
     const expira = novaValidade();
     await consulta('select auth_renovar_sessao($1, $2)', [hash, expira.toISOString()]);
     try {
-      cookies().set(COOKIE_SESSAO, token, opcoesDoCookie(expira));
+      jar.set(COOKIE_SESSAO, token, await opcoesDoCookie(expira));
     } catch {
       // Fora de Route Handler o cookie é só leitura. A sessão no banco já foi
       // estendida; o cookie é atualizado na próxima chamada de rota.

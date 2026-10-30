@@ -13,6 +13,7 @@ import { ErroDeNegocio } from '@/dominio/erros.js';
 import { usuarioAtual } from '@/infraestrutura/seguranca/sessao.js';
 import { falha } from './resposta.js';
 import { baseDaApi } from './governanca.js';
+import { LIMITE_CORPO_JSON } from './limites-corpo.js';
 
 /**
  * @typedef {object} Contexto
@@ -81,6 +82,10 @@ export async function despachar(req, caminho) {
         },
         json: async () => {
           const texto = await req.text();
+          // O proxy recusa pelo Content-Length; isto cobre corpo sem ele (chunked).
+          if (texto.length > LIMITE_CORPO_JSON) {
+            throw new ErroDeNegocio('ARQUIVO_GRANDE_DEMAIS', 'A requisição passa do tamanho permitido.');
+          }
           if (!texto.trim()) return {};
           try { return JSON.parse(texto); } catch {
             throw new ErroDeNegocio('DADOS_INVALIDOS', 'O corpo da requisição não é um JSON válido.');

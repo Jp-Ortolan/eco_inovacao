@@ -120,8 +120,10 @@ Variáveis do serviço da aplicação:
 |---|---|
 | `DATABASE_URL` | string com o usuário **app_web** |
 | `URL_FRONTEND` | a URL pública do **front-end**: origem liberada no CORS, base do QR e do link de senha |
-| `COOKIE_CROSS_SITE` | Opcional desde outubro: a API detecta sozinha o front em outro domínio HTTPS e grava o cookie `SameSite=None; Secure; Partitioned`. `1` força esse modo |
-| `EMAIL_PROVEDOR` | `resend` quando houver conta; sem ela, o link sai no log |
+| `URL_API` | endereço público desta API (links do QR e de download) |
+| `SEGREDO_LINKS` | `openssl rand -hex 32` — assina os links de download |
+| `COOKIE_CROSS_SITE` | Opcional: a API detecta sozinha o front em outro domínio HTTPS e grava o cookie `SameSite=None; Secure; Partitioned`. `1` força esse modo |
+| `EMAIL_PROVEDOR` | `resend`. Sem provedor nenhum e-mail sai, e em produção o conteúdo não vai para o log |
 | `RESEND_API_KEY` | chave do provedor |
 | `EMAIL_REMETENTE` | remetente verificado |
 
@@ -180,7 +182,7 @@ backup — é esperança. Fica como card da Semana 6.
 
 ---
 
-## Sessão com front e API em domínios diferentes (revisão de outubro)
+## Sessão com front e API em domínios diferentes
 
 Front no Vercel e API no Railway são **sites diferentes**. O cookie de sessão só
 volta se for gravado com `SameSite=None; Secure` — e, no Chrome com bloqueio de
@@ -203,3 +205,8 @@ da regra que manda tudo para o `index.html`:
 
 e `VITE_API_URL=` (vazio) no `.env.production` do front. O cookie passa a ser do
 próprio domínio do front, e o CORS deixa de ser necessário em produção.
+
+Com o rewrite há **dois** proxies na frente da API (Vercel e Railway):
+`PROXIES_CONFIAVEIS=2`, senão os limites de tentativa contam o IP do Vercel.
+`URL_FRONTEND` continua necessária: o navegador manda a origem do front nos
+POST, e a API recusa pedido que muda dados vindo de origem não listada.

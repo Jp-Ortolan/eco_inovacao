@@ -116,9 +116,9 @@ export async function obterReuniao(usuario, id, natureza) {
       status: r.status,
 
       checkin: {
-// O token é o segredo do QR: quem o tem registra presença. Só a gestão o
-// recebe — é ela que projeta o QR na sala. O representante registra a própria
-// presença lendo o QR na hora, e não pode repassar o link para quem não veio.
+        // O token é o segredo do QR: quem o tem registra presença. Só a gestão o
+        // recebe — é ela que projeta o QR na sala. O representante registra a própria
+        // presença lendo o QR na hora, e não pode repassar o link para quem não veio.
         token: gestao ? r.qr_token : null,
         url: gestao ? urlDeCheckin(r.qr_token) : null,
         aberto: r.checkin_aberto_agora,

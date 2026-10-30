@@ -17,14 +17,16 @@ Migrations 013 a 016 · código em `src/aplicacao/governanca/` · uma rota só
 |---|---|
 | `versao: 1` | Em toda resposta de sucesso (`okV1`) |
 | `confirmado: true` | Em toda mutação, só depois do commit (`confirmadoV1`) |
-| Erros | `{ erro: { codigo, mensagem, campos? } }` — 401, 403, 404, 409, 413, 415, 422 |
+| Erros | `{ erro: { codigo, mensagem, campos? } }` — 401, 403, 404, 409, 413, 415, 422, 429 |
 | Listas | `{ versao, dados: [...] }`, conjunto autorizado completo (sem paginação), exceto auditoria (cursor) |
 | Datas | Civis `AAAA-MM-DD`; horas `HH:mm`; instantes com fuso (`2026-11-01T09:00:00-03:00`). Horário local sem fuso vindo de formulário é lido em `America/Sao_Paulo` |
 | Concorrência | `versaoRegistro` (coluna `versao_registro`, sobe a cada mudança real). Versão velha → **409 `VERSAO_DESATUALIZADA`** |
 | Idempotência | `chaveOperacao` (UUID) em presença manual e convocação. Mesma chave + mesmo conteúdo → mesma resposta, sem duplicar; conteúdo diferente → **409 `OPERACAO_REPETIDA_DIFERENTE`** |
 | Links | Absolutos. Arquivos privados saem por link assinado de 15 min (`/arquivos/:token`), porque o cookie particionado não acompanha uma aba nova |
 | Papéis | Sessão continua com `admin` / `diretoria` / `representante`; `/contas` devolve os canônicos `admin_geral` / `diretoria` / `representante_instituicao` e aceita os dois |
-| Sem login | Só `/publico`, `/checkin/:token`, `/qr/:token`, `/arquivos/:token` (middleware) |
+| Sem login | Só `/publico`, `/checkin/:token`, `/qr/:token`, `/arquivos/:token` (`src/proxy.js`) |
+| Origem | POST/PATCH/PUT/DELETE só de origem listada em `URL_FRONTEND` → senão **403 `ORIGEM_NAO_PERMITIDA`** |
+| Tamanho | JSON até 2 MB, multipart até 25 MB → **413** |
 
 ## Rotas
 
@@ -90,16 +92,16 @@ Prefixo `/api/governanca`. ● gestão (admin + Diretoria) · A só admin · R r
 | Variável | Obrigatória | Para quê |
 |---|---|---|
 | `SEGREDO_LINKS` | **Sim, em produção** | Assina os links de download. Sem ela, cada reinício invalida os links |
-| `URL_API` | Recomendada | Endereço público da API nos links (QR, arquivos). Sem ela, usa o host da requisição |
+| `URL_API` | **Sim, em produção** | Endereço público da API nos links (QR, arquivos). Sem ela, usa o host da requisição |
 | `EMAIL_PROVEDOR`, `RESEND_API_KEY`, `EMAIL_REMETENTE` | Para e-mail real | Convocações, convites, recuperação de senha |
 
 ## Como homologar
 
 ```bash
-npm install                 # entram exceljs, pdfkit e qrcode
-npm run db:migrar           # 013 a 016 (a 013 roda sem transação, de propósito)
-npm run db:testar           # 127 testes SQL
-npm test                    # domínio + integração (186)
+npm install
+npm run db:migrar           # a 013 roda sem transação, de propósito
+npm run db:testar           # testes SQL
+npm test                    # domínio + integração
 ```
 
 Roteiro manual mínimo, no domínio real da Vercel: painel público sem login;

@@ -10,7 +10,7 @@
  *   GET /api/publico/documentos
  *   GET /api/publico/documentos/:id
  *
- * Sem sessão: o middleware deixa passar tudo sob /api/publico. Com limite por IP.
+ * Sem sessão: o proxy deixa passar tudo sob /api/publico. Com limite por IP.
  */
 import { painelPublico } from '@/aplicacao/publico/painel-publico.js';
 import { ok, falha } from '@/infraestrutura/http/resposta.js';

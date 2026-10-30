@@ -1,5 +1,5 @@
 /**
- * APRESENTAÇÃO — área da instituição (revisão de outubro).
+ * APRESENTAÇÃO — área da instituição.
  *
  *   GET   /api/minha-instituicao     a ficha completa da instituição do representante
  *   PATCH /api/minha-instituicao     telefone, e-mail, endereço, redes, contatos, autorizações

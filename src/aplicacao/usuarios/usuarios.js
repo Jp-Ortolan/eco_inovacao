@@ -1,5 +1,5 @@
 /**
- * CASOS DE USO — Contas e permissões (revisão de outubro).
+ * CASOS DE USO — Contas e permissões.
  *
  * "Gerenciar contas e permissões: só o Administrador geral." Não existia rota
  * nenhuma para isso: contas eram criadas por script. Agora o admin cria a
@@ -23,10 +23,10 @@ const objetoUsuario = z.object({
   nome: z.string().trim().min(3, 'Informe o nome.').max(200),
   email: z.string().trim().email('E-mail inválido.').transform((v) => v.toLowerCase()),
   papel: z.enum(PAPEIS, {
-    errorMap: () => ({ message: 'Perfil inválido: admin, diretoria ou representante.' }),
+    message: 'Perfil inválido: admin, diretoria ou representante.',
   }),
-  instituicaoId: z.string().uuid().nullable().optional(),
-  pessoaId: z.string().uuid().nullable().optional(),
+  instituicaoId: z.string().guid().nullable().optional(),
+  pessoaId: z.string().guid().nullable().optional(),
   ativo: z.boolean().optional(),
 });
 
@@ -42,7 +42,7 @@ export const esquemaEditarUsuario = objetoUsuario.partial();
 export const esquemaFiltroUsuario = z.object({
   busca: z.string().trim().max(120).optional(),
   papel: z.enum(PAPEIS).optional(),
-  instituicaoId: z.string().uuid().optional(),
+  instituicaoId: z.string().guid().optional(),
   ativo: z.enum(['true', 'false']).optional(),
 });
 
